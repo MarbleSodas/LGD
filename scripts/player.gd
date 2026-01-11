@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 ## Player movement speeds
-@export var walk_speed: float = 120.0
+@export var walk_speed: float = 160.0
 @export var run_speed: float = 220.0
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D

@@ -1,8 +1,11 @@
-[gd_scene load_steps=7 format=4 uid="uid://exyfbrw1ypv1"]
+[gd_scene load_steps=10 format=4 uid="uid://exyfbrw1ypv1"]
 
 [ext_resource type="Texture2D" uid="uid://wrj60afx6a6b" path="res://assets/world/Grass_0.png" id="1_fj7yv"]
 [ext_resource type="Texture2D" uid="uid://baxn1bo6eirtv" path="res://assets/world/Grass_Clear.png" id="2_tlwt5"]
 [ext_resource type="PackedScene" uid="uid://6yesugok0kny" path="res://player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://b7u70r6vna5h1" path="res://ui/ui.tscn" id="4_ui"]
+[ext_resource type="Script" path="res://scripts/planting_system.gd" id="5_planting"]
+[ext_resource type="PackedScene" path="res://scenes/dandelion.tscn" id="6_dandelion"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aqk2v"]
 texture = ExtResource("1_fj7yv")
@@ -27,3 +30,9 @@ tile_set = SubResource("TileSet_dwbse")
 
 [node name="Hana" parent="." instance=ExtResource("3_player")]
 position = Vector2(320, 200)
+
+[node name="UI" parent="." instance=ExtResource("4_ui")]
+
+[node name="PlantingSystem" type="Node2D" parent="."]
+script = ExtResource("5_planting")
+plant_scene = ExtResource("6_dandelion")

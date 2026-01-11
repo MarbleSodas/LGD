@@ -40,7 +40,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4flbx"]
-size = Vector2(24, 42)
+size = Vector2(24, 24)
 
 [node name="Hana" type="CharacterBody2D"]
 script = ExtResource("2_script")
@@ -50,7 +50,7 @@ sprite_frames = SubResource("SpriteFrames_2hs0m")
 animation = &"idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(2, 3)
+position = Vector2(2, 12)
 shape = SubResource("RectangleShape2D_4flbx")
 
 [node name="Camera2D" type="Camera2D" parent="."]

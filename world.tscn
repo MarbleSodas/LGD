@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://baxn1bo6eirtv" path="res://assets/world/Grass_Clear.png" id="2_tlwt5"]
 [ext_resource type="PackedScene" uid="uid://6yesugok0kny" path="res://player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://b7u70r6vna5h1" path="res://ui/ui.tscn" id="4_ui"]
-[ext_resource type="Script" path="res://scripts/planting_system.gd" id="5_planting"]
+[ext_resource type="Script" uid="uid://sh72rhmxm7tq" path="res://scripts/planting_system.gd" id="5_planting"]
 [ext_resource type="PackedScene" path="res://scenes/dandelion.tscn" id="6_dandelion"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aqk2v"]
@@ -35,4 +35,6 @@ position = Vector2(320, 200)
 
 [node name="PlantingSystem" type="Node2D" parent="."]
 script = ExtResource("5_planting")
+preview_color_valid = Color(0.5019608, 0.7019608, 1, 0.7019608)
 plant_scene = ExtResource("6_dandelion")
+grid_outline_color = Color(0.5019608, 0.7019608, 1, 0.7019608)

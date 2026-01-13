@@ -3,7 +3,7 @@ extends MarginContainer
 ## Emitted when the selected hotbar slot changes
 signal slot_changed(index: int)
 
-var current_slot: int = 0
+var current_slot: int = -1  # -1 means nothing selected
 var slots: Array[Panel] = []
 
 # StyleBoxFlat for active slot (red border only, transparent bg)
@@ -13,7 +13,7 @@ var active_style: StyleBoxFlat
 func _ready() -> void:
 	_setup_styles()
 	_cache_slots()
-	select_slot(0)
+	# Start with nothing selected (current_slot = -1)
 
 
 func _setup_styles() -> void:
@@ -35,25 +35,34 @@ func _cache_slots() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("hotbar_1"):
-		select_slot(0)
+		_toggle_slot(0)
 	elif event.is_action_pressed("hotbar_2"):
-		select_slot(1)
+		_toggle_slot(1)
 	elif event.is_action_pressed("hotbar_3"):
-		select_slot(2)
+		_toggle_slot(2)
 	elif event.is_action_pressed("hotbar_4"):
-		select_slot(3)
+		_toggle_slot(3)
 	elif event.is_action_pressed("hotbar_5"):
-		select_slot(4)
+		_toggle_slot(4)
 	elif event.is_action_pressed("hotbar_6"):
-		select_slot(5)
+		_toggle_slot(5)
 	elif event.is_action_pressed("hotbar_7"):
-		select_slot(6)
+		_toggle_slot(6)
 	elif event.is_action_pressed("hotbar_8"):
-		select_slot(7)
+		_toggle_slot(7)
 	elif event.is_action_pressed("hotbar_9"):
-		select_slot(8)
+		_toggle_slot(8)
 	elif event.is_action_pressed("hotbar_0"):
-		select_slot(9)
+		_toggle_slot(9)
+
+
+func _toggle_slot(index: int) -> void:
+	if current_slot == index:
+		# Pressing the same slot deselects it
+		deselect_slot()
+	else:
+		# Pressing a different slot selects it
+		select_slot(index)
 
 
 func select_slot(index: int) -> void:
@@ -69,4 +78,13 @@ func select_slot(index: int) -> void:
 	slots[current_slot].add_theme_stylebox_override("panel", active_style)
 	
 	# Notify other systems of the slot change
+	slot_changed.emit(current_slot)
+
+
+func deselect_slot() -> void:
+	# Remove highlight from current slot
+	if current_slot >= 0 and current_slot < slots.size():
+		slots[current_slot].remove_theme_stylebox_override("panel")
+	
+	current_slot = -1
 	slot_changed.emit(current_slot)

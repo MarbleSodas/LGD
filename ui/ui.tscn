@@ -1,7 +1,12 @@
-[gd_scene load_steps=3 format=3 uid="uid://b7u70r6vna5h1"]
+[gd_scene load_steps=5 format=3 uid="uid://b7u70r6vna5h1"]
 
 [ext_resource type="Script" uid="uid://beofp0rx6h1ga" path="res://ui/hotbar.gd" id="1_hotbar"]
 [ext_resource type="Texture2D" uid="uid://crxuyk4g05ifs" path="res://assets/objects/items/DandelionTuft.png" id="2_tuft"]
+[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/Dandelion.png" id="3_dandelion"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dandelion"]
+atlas = ExtResource("3_dandelion")
+region = Rect2(64, 0, 32, 32)
 
 [node name="UI" type="CanvasLayer"]
 
@@ -40,7 +45,7 @@ offset_right = -4.0
 offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("2_tuft")
+texture = SubResource("AtlasTexture_dandelion")
 expand_mode = 1
 stretch_mode = 5
 

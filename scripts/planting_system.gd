@@ -11,10 +11,16 @@ extends Node2D
 @export var preview_color_valid: Color = Color(0.5, 0.7, 1.0, 0.7)
 @export var preview_color_invalid: Color = Color(1.0, 0.3, 0.3, 0.7)
 
+## Delete mode visual configuration
+@export var delete_highlight_color: Color = Color(1.0, 0.4, 0.4, 1.0)  # Red tint for hovered plant
+@export var delete_grid_color: Color = Color(1.0, 0.3, 0.3, 0.6)       # Red grid outline
+@export var delete_bulk_color: Color = Color(1.0, 0.2, 0.2, 0.7)       # Red bulk selection
+
 ## References (set in _ready or via editor)
 var tile_map: TileMapLayer
 var player: CharacterBody2D
 var hotbar: MarginContainer
+var delete_overlay: Control
 
 ## Preview sprite child
 var preview_sprite: Sprite2D
@@ -37,6 +43,14 @@ var show_grid: bool = false
 ## Bulk placement state
 var bulk_start_tile: Vector2i = Vector2i.ZERO  # First clicked tile (Point A)
 var bulk_start_set: bool = false               # True after Shift+Click sets Point A
+
+## Delete mode state
+var delete_mode: bool = false
+var hovered_plant: Node2D = null
+var hovered_tile: Vector2i = Vector2i.ZERO
+var last_hovered_plant: Node2D = null
+var bulk_delete_start_tile: Vector2i = Vector2i.ZERO
+var bulk_delete_start_set: bool = false
 
 ## Visual configuration for bulk selection
 @export var bulk_start_marker_color: Color = Color(0.2, 1.0, 0.2, 0.9)  # Bright green outline for Point A
@@ -75,6 +89,7 @@ func _find_references() -> void:
 	var ui := get_parent().get_node_or_null("UI") as CanvasLayer
 	if ui:
 		hotbar = ui.get_node_or_null("Hotbar") as MarginContainer
+		delete_overlay = ui.get_node_or_null("DeleteModeOverlay")
 	if not hotbar:
 		push_error("PlantingSystem: Hotbar not found!")
 
@@ -85,6 +100,10 @@ func _connect_signals() -> void:
 
 
 func _on_active_buildable_changed(item: BuildableItem) -> void:
+	# Exit delete mode when entering build mode
+	if item != null and delete_mode:
+		_exit_delete_mode()
+	
 	# Cancel bulk mode when switching tools
 	if bulk_start_set:
 		_cancel_bulk_mode()
@@ -98,6 +117,11 @@ func _on_active_buildable_changed(item: BuildableItem) -> void:
 
 
 func _process(_delta: float) -> void:
+	# Delete mode processing
+	if delete_mode:
+		_update_delete_preview()
+		return
+
 	if BuildRegistry.active_buildable == null:
 		preview_sprite.visible = false
 		if show_grid:
@@ -112,7 +136,12 @@ func _draw() -> void:
 	if not show_grid:
 		return
 	
-	if bulk_start_set:
+	if delete_mode:
+		if bulk_delete_start_set:
+			_draw_bulk_delete_selection()
+		else:
+			_draw_delete_grid()
+	elif bulk_start_set:
 		_draw_bulk_selection()
 	else:
 		_draw_normal_grid()
@@ -135,6 +164,22 @@ func _draw_normal_grid() -> void:
 			var tile_center := current_tile_center + offset
 			_draw_tile_outline(tile_center, tile_color)
 
+func _draw_delete_grid() -> void:
+	# Draw red-tinted grid with distance fade
+	for x in range(-grid_radius, grid_radius + 1):
+		for y in range(-grid_radius, grid_radius + 1):
+			var distance := maxi(absi(x), absi(y))
+			var opacity_falloff := 1.0 - (float(distance) / float(grid_radius + 1))
+			var tile_color := Color(
+				delete_grid_color.r,
+				delete_grid_color.g,
+				delete_grid_color.b,
+				delete_grid_color.a * opacity_falloff
+			)
+			
+			var offset := Vector2(x * tile_size.x, y * tile_size.y)
+			var tile_center := current_tile_center + offset
+			_draw_tile_outline(tile_center, tile_color)
 
 func _draw_bulk_selection() -> void:
 	if not tile_map or not preview_sprite.texture:
@@ -180,6 +225,47 @@ func _draw_bulk_selection() -> void:
 			var preview_color := preview_color_valid if is_whole_area_valid else preview_color_invalid
 			_draw_preview_at(world_pos, preview_color)
 
+func _draw_bulk_delete_selection() -> void:
+	if not tile_map:
+		return
+	
+	var mouse_pos := get_global_mouse_position()
+	var end_tile := tile_map.local_to_map(mouse_pos)
+	
+	# Calculate bounding rectangle
+	var min_tile := Vector2i(
+		mini(bulk_delete_start_tile.x, end_tile.x),
+		mini(bulk_delete_start_tile.y, end_tile.y)
+	)
+	var max_tile := Vector2i(
+		maxi(bulk_delete_start_tile.x, end_tile.x),
+		maxi(bulk_delete_start_tile.y, end_tile.y)
+	)
+	
+	# Draw selection area with plant indicators
+	for x in range(min_tile.x, max_tile.x + 1):
+		for y in range(min_tile.y, max_tile.y + 1):
+			var tile_coords := Vector2i(x, y)
+			var world_pos := tile_map.map_to_local(tile_coords)
+			
+			# Highlight start tile differently
+			var is_start := tile_coords == bulk_delete_start_tile
+			var has_plant := occupied_tiles.has(tile_coords)
+			
+			# Choose outline color
+			var outline_color: Color
+			if is_start:
+				outline_color = Color(1.0, 1.0, 0.3, 0.9)  # Yellow for start
+			elif has_plant:
+				outline_color = delete_bulk_color  # Red for plants to delete
+			else:
+				outline_color = Color(delete_grid_color.r, delete_grid_color.g, delete_grid_color.b, 0.3)
+			
+			_draw_tile_outline(world_pos, outline_color)
+			
+			# Draw X marker on tiles with plants
+			if has_plant:
+				_draw_delete_marker(world_pos)
 
 func _draw_preview_at(world_pos: Vector2, color: Color) -> void:
 	var texture := preview_sprite.texture
@@ -212,6 +298,22 @@ func _draw_tile_outline(center: Vector2, color: Color) -> void:
 	draw_line(bottom_right, bottom_left, color, grid_outline_width)
 	draw_line(bottom_left, top_left, color, grid_outline_width)
 
+func _draw_delete_marker(center: Vector2) -> void:
+	# Draw an X to indicate deletion
+	var size := tile_size.x * 0.3
+	var local_center := to_local(center)
+	var color := Color(1.0, 0.2, 0.2, 0.8)
+	
+	draw_line(
+		local_center + Vector2(-size, -size),
+		local_center + Vector2(size, size),
+		color, 2.0
+	)
+	draw_line(
+		local_center + Vector2(size, -size),
+		local_center + Vector2(-size, size),
+		color, 2.0
+	)
 
 func _update_preview() -> void:
 	if not tile_map or not player:
@@ -247,6 +349,33 @@ func _update_preview() -> void:
 		# Set color based on validity
 		preview_sprite.modulate = preview_color_valid if can_place else preview_color_invalid
 
+func _update_delete_preview() -> void:
+	if not tile_map:
+		return
+	
+	var mouse_pos := get_global_mouse_position()
+	var tile_coords := tile_map.local_to_map(mouse_pos)
+	var snapped_pos := tile_map.map_to_local(tile_coords)
+	
+	# Update grid center for drawing
+	current_tile_center = snapped_pos
+	hovered_tile = tile_coords
+	show_grid = true
+	queue_redraw()
+	
+	# In bulk delete mode, don't highlight individual plants
+	if bulk_delete_start_set:
+		_clear_plant_highlight()
+		hovered_plant = null
+		return
+	
+	# Find plant at this tile for single-delete highlighting
+	var plant = occupied_tiles.get(tile_coords)
+	
+	if plant != hovered_plant:
+		_clear_plant_highlight()
+		hovered_plant = plant
+		_apply_plant_highlight()
 
 func _load_preview_texture() -> void:
 	var item = BuildRegistry.active_buildable
@@ -308,12 +437,30 @@ func _is_bulk_modifier_pressed() -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	# Toggle delete mode with F key
+	if event.is_action_pressed("toggle_delete_mode"):
+		if delete_mode:
+			_exit_delete_mode()
+		else:
+			_enter_delete_mode()
+		return
+	
+	# === DELETE MODE INPUT ===
+	if delete_mode:
+		_handle_delete_input(event)
+		return
+
 	if BuildRegistry.active_buildable == null:
 		return
 	
-	# Cancel bulk mode on right-click
-	if event.is_action_pressed("cancel") and bulk_start_set:
-		_cancel_bulk_mode()
+	# === BUILD MODE INPUT ===
+	
+	# Right-click exits build mode (or cancels bulk)
+	if event.is_action_pressed("cancel"):
+		if bulk_start_set:
+			_cancel_bulk_mode()
+		else:
+			BuildRegistry.clear_active()
 		return
 	
 	if event.is_action_pressed("place"):
@@ -327,6 +474,75 @@ func _input(event: InputEvent) -> void:
 			# Normal single placement (no Shift, no bulk mode)
 			_place_plant()
 
+
+func _handle_delete_input(event: InputEvent) -> void:
+	# Right-click: cancel bulk delete or exit delete mode
+	if event.is_action_pressed("cancel"):
+		if bulk_delete_start_set:
+			_cancel_bulk_delete()
+		else:
+			_exit_delete_mode()
+		return
+	
+	# Left-click handling
+	if event.is_action_pressed("place"):
+		if bulk_delete_start_set:
+			# Second click: execute bulk delete
+			_execute_bulk_delete()
+		elif _is_bulk_modifier_pressed():
+			# Shift+Click: start bulk delete selection
+			_start_bulk_delete()
+		elif hovered_plant:
+			# Single plant deletion
+			_delete_single_plant()
+
+func _enter_delete_mode() -> void:
+	# Exit build mode first if active
+	if BuildRegistry.active_buildable != null:
+		BuildRegistry.clear_active()
+	
+	# Cancel any pending bulk placement
+	if bulk_start_set:
+		_cancel_bulk_mode()
+	
+	delete_mode = true
+	preview_sprite.visible = false
+	
+	# Show red border overlay
+	if delete_overlay:
+		delete_overlay.show_overlay()
+	
+	queue_redraw()
+
+func _exit_delete_mode() -> void:
+	delete_mode = false
+	bulk_delete_start_set = false
+	bulk_delete_start_tile = Vector2i.ZERO
+	
+	_clear_plant_highlight()
+	hovered_plant = null
+	
+	# Hide red border overlay
+	if delete_overlay:
+		delete_overlay.hide_overlay()
+	
+	show_grid = false
+	queue_redraw()
+
+func _apply_plant_highlight() -> void:
+	if hovered_plant and is_instance_valid(hovered_plant):
+		last_hovered_plant = hovered_plant
+		# Store original modulate for restoration
+		if not hovered_plant.has_meta("original_modulate"):
+			hovered_plant.set_meta("original_modulate", hovered_plant.modulate)
+		hovered_plant.modulate = delete_highlight_color
+
+func _clear_plant_highlight() -> void:
+	if last_hovered_plant and is_instance_valid(last_hovered_plant):
+		var original = last_hovered_plant.get_meta("original_modulate", Color.WHITE)
+		last_hovered_plant.modulate = original
+		last_hovered_plant.remove_meta("original_modulate")
+	last_hovered_plant = null
 
 func _place_plant() -> void:
 	if not tile_map:
@@ -410,3 +626,74 @@ func _place_bulk() -> void:
 			_place_plant_at(tile_coords, world_pos)
 	
 	_cancel_bulk_mode()
+
+func _delete_single_plant() -> void:
+	if not hovered_plant or not is_instance_valid(hovered_plant):
+		return
+	
+	_delete_plant_at(hovered_tile)
+	
+	hovered_plant = null
+	last_hovered_plant = null
+
+func _delete_plant_at(tile_coords: Vector2i) -> void:
+	var plant = occupied_tiles.get(tile_coords)
+	if not plant or not is_instance_valid(plant):
+		return
+	
+	# Remove from tracking
+	occupied_tiles.erase(tile_coords)
+	
+	# Restore tile to original grass
+	tile_map.set_cell(tile_coords, GRASS_SOURCE_ID, Vector2i.ZERO)
+	
+	# Delete the plant node
+	plant.queue_free()
+
+func _start_bulk_delete() -> void:
+	if not tile_map:
+		return
+	
+	var mouse_pos := get_global_mouse_position()
+	bulk_delete_start_tile = tile_map.local_to_map(mouse_pos)
+	bulk_delete_start_set = true
+	
+	_clear_plant_highlight()
+	queue_redraw()
+
+func _cancel_bulk_delete() -> void:
+	bulk_delete_start_set = false
+	bulk_delete_start_tile = Vector2i.ZERO
+	queue_redraw()
+
+func _execute_bulk_delete() -> void:
+	if not tile_map:
+		_cancel_bulk_delete()
+		return
+	
+	var mouse_pos := get_global_mouse_position()
+	var end_tile := tile_map.local_to_map(mouse_pos)
+	
+	# Calculate bounding rectangle
+	var min_tile := Vector2i(
+		mini(bulk_delete_start_tile.x, end_tile.x),
+		mini(bulk_delete_start_tile.y, end_tile.y)
+	)
+	var max_tile := Vector2i(
+		maxi(bulk_delete_start_tile.x, end_tile.x),
+		maxi(bulk_delete_start_tile.y, end_tile.y)
+	)
+	
+	# Collect plants to delete
+	var plants_to_delete: Array[Vector2i] = []
+	for x in range(min_tile.x, max_tile.x + 1):
+		for y in range(min_tile.y, max_tile.y + 1):
+			var tile_coords := Vector2i(x, y)
+			if occupied_tiles.has(tile_coords):
+				plants_to_delete.append(tile_coords)
+	
+	# Delete all plants in selection
+	for tile_coords in plants_to_delete:
+		_delete_plant_at(tile_coords)
+	
+	_cancel_bulk_delete()

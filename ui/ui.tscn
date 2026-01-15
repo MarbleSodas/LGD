@@ -1,14 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://b7u70r6vna5h1"]
+[gd_scene load_steps=5 format=3 uid="uid://b7u70r6vna5h1"]
 
 [ext_resource type="Script" uid="uid://beofp0rx6h1ga" path="res://ui/hotbar.gd" id="1_hotbar"]
-[ext_resource type="PackedScene" uid="uid://c5x8k2n9m4j1" path="res://ui/components/hotbar_slot.tscn" id="2_slot"]
-[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/Dandelion.png" id="3_dandelion"]
-[ext_resource type="PackedScene" path="res://ui/components/build_menu.tscn" id="4_build_menu"]
+[ext_resource type="PackedScene" uid="uid://c5x8k2oam4j1" path="res://ui/components/hotbar_slot.tscn" id="2_slot"]
+[ext_resource type="PackedScene" uid="uid://d3x1y2oam4k3" path="res://ui/components/build_menu.tscn" id="4_build_menu"]
 [ext_resource type="PackedScene" path="res://ui/components/inventory_panel.tscn" id="5_inventory_panel"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_dandelion"]
-atlas = ExtResource("3_dandelion")
-region = Rect2(64, 0, 32, 32)
+[ext_resource type="PackedScene" uid="uid://c8y2b4x9z1w3" path="res://ui/components/delete_mode_overlay.tscn" id="6_overlay"]
 
 [node name="UI" type="CanvasLayer"]
 
@@ -73,5 +69,7 @@ slot_index = 8
 [node name="Slot9" parent="Hotbar/HBoxContainer" instance=ExtResource("2_slot")]
 layout_mode = 2
 slot_index = 9
+
+[node name="DeleteModeOverlay" parent="." instance=ExtResource("6_overlay")]
 
 [editable path="Hotbar/HBoxContainer/Slot0"]

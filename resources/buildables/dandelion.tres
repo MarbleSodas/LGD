@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BuildableItem" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/buildable_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/Dandelion.png" id="2_icon"]
+[ext_resource type="PackedScene" path="res://scenes/dandelion.tscn" id="3_scene"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icon")
+region = Rect2(64, 0, 32, 32)
+
+[resource]
+script = ExtResource("1_script")
+id = "dandelion"
+display_name = "Dandelion"
+icon = SubResource("AtlasTexture_icon")
+scene = ExtResource("3_scene")
+preview_texture = ExtResource("2_icon")
+preview_frame = 2
+preview_hframes = 3

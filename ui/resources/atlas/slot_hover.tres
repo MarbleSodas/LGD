@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3 uid="uid://h36kcpndk6w5"]
+
+[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="1_tex"]
+
+[resource]
+atlas = ExtResource("1_tex")
+region = Rect2(233, 73, 30, 32)

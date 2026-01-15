@@ -11,9 +11,6 @@ extends Node2D
 @export var preview_color_valid: Color = Color(0.5, 0.7, 1.0, 0.7)
 @export var preview_color_invalid: Color = Color(1.0, 0.3, 0.3, 0.7)
 
-## The plant scene to spawn (set per-item, dandelion for slot 0)
-@export var plant_scene: PackedScene
-
 ## References (set in _ready or via editor)
 var tile_map: TileMapLayer
 var player: CharacterBody2D
@@ -39,13 +36,10 @@ var show_grid: bool = false
 
 ## Bulk placement state
 var bulk_start_tile: Vector2i = Vector2i.ZERO  # First clicked tile (Point A)
-var bulk_start_set: bool = false               # True after Ctrl+Click sets Point A
+var bulk_start_set: bool = false               # True after Shift+Click sets Point A
 
 ## Visual configuration for bulk selection
 @export var bulk_start_marker_color: Color = Color(0.2, 1.0, 0.2, 0.9)  # Bright green outline for Point A
-
-## Which hotbar slot enables this planting tool (slot 0 = dandelion, -1 = none)
-var active_slot: int = -1
 
 ## Tile source IDs in the TileSet
 const GRASS_SOURCE_ID: int = 0
@@ -86,24 +80,25 @@ func _find_references() -> void:
 
 
 func _connect_signals() -> void:
-	if hotbar and hotbar.has_signal("slot_changed"):
-		hotbar.slot_changed.connect(_on_hotbar_slot_changed)
+	if BuildRegistry:
+		BuildRegistry.active_buildable_changed.connect(_on_active_buildable_changed)
 
 
-func _on_hotbar_slot_changed(slot_index: int) -> void:
-	active_slot = slot_index
-	
+func _on_active_buildable_changed(item: BuildableItem) -> void:
 	# Cancel bulk mode when switching tools
 	if bulk_start_set:
 		_cancel_bulk_mode()
 	
-	# Hide preview if not on plant tool slot
-	if slot_index != 0:
+	if item == null:
 		preview_sprite.visible = false
+		show_grid = false
+		queue_redraw()
+	else:
+		_load_preview_texture()
 
 
 func _process(_delta: float) -> void:
-	if active_slot != 0:
+	if BuildRegistry.active_buildable == null:
 		preview_sprite.visible = false
 		if show_grid:
 			show_grid = false
@@ -191,8 +186,8 @@ func _draw_preview_at(world_pos: Vector2, color: Color) -> void:
 	if not texture:
 		return
 	
-	# Calculate the source rect for the current frame (frame 2 = flowering)
-	var frame_width := texture.get_width() / preview_sprite.hframes
+	# Calculate the source rect for the current frame
+	var frame_width := float(texture.get_width()) / float(preview_sprite.hframes)
 	var src_rect := Rect2(frame_width * preview_sprite.frame, 0, frame_width, texture.get_height())
 	
 	# Calculate destination position (centered, with plant offset)
@@ -254,12 +249,14 @@ func _update_preview() -> void:
 
 
 func _load_preview_texture() -> void:
-	# Load the dandelion texture for preview (showing flowering stage - frame 2)
-	var texture := load("res://assets/objects/Dandelion.png") as Texture2D
-	if texture:
-		preview_sprite.texture = texture
-		preview_sprite.hframes = 3
-		preview_sprite.frame = 2  # Flowering stage for preview
+	var item = BuildRegistry.active_buildable
+	if item == null:
+		return
+		
+	if item.preview_texture:
+		preview_sprite.texture = item.preview_texture
+		preview_sprite.hframes = item.preview_hframes
+		preview_sprite.frame = item.preview_frame
 
 
 func _check_can_place(tile_coords: Vector2i, world_pos: Vector2) -> bool:
@@ -305,8 +302,13 @@ func _overlaps_player(tile_center: Vector2) -> bool:
 	return player_rect.intersects(tile_rect)
 
 
+## Check if bulk mode modifier is pressed (Command on Mac, Ctrl on others)
+func _is_bulk_modifier_pressed() -> bool:
+	return Input.is_action_pressed("bulk_modifier")
+
+
 func _input(event: InputEvent) -> void:
-	if active_slot != 0:
+	if BuildRegistry.active_buildable == null:
 		return
 	
 	# Cancel bulk mode on right-click
@@ -318,16 +320,16 @@ func _input(event: InputEvent) -> void:
 		if bulk_start_set:
 			# Second click: complete bulk placement
 			_place_bulk()
-		elif Input.is_key_pressed(KEY_CTRL):
-			# Ctrl + Click: start bulk mode
+		elif _is_bulk_modifier_pressed():
+			# Shift + Click: start bulk mode
 			_set_bulk_start()
 		elif can_place:
-			# Normal single placement (no Ctrl, no bulk mode)
+			# Normal single placement (no Shift, no bulk mode)
 			_place_plant()
 
 
 func _place_plant() -> void:
-	if not tile_map or not plant_scene:
+	if not tile_map:
 		return
 	
 	var mouse_world_pos := get_global_mouse_position()
@@ -341,11 +343,15 @@ func _place_plant() -> void:
 
 
 func _place_plant_at(tile_coords: Vector2i, world_pos: Vector2) -> void:
+	var item = BuildRegistry.active_buildable
+	if item == null or item.scene == null:
+		return
+	
 	# Change the tile to Grass_Clear
 	tile_map.set_cell(tile_coords, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
 	
 	# Instantiate the plant
-	var plant_instance := plant_scene.instantiate() as Node2D
+	var plant_instance := item.scene.instantiate() as Node2D
 	plant_instance.global_position = world_pos + plant_offset
 	
 	# Add to world (as sibling)
@@ -369,7 +375,7 @@ func _cancel_bulk_mode() -> void:
 
 
 func _place_bulk() -> void:
-	if not tile_map or not plant_scene:
+	if not tile_map:
 		_cancel_bulk_mode()
 		return
 	

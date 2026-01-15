@@ -1,0 +1,73 @@
+[gd_scene load_steps=4 format=3 uid="uid://d3x1y2oam4k3"]
+
+[ext_resource type="Script" uid="uid://cdqq1y7xwe6m4" path="res://ui/components/build_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.639, 0.463, 0.337, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[node name="BuildMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_menu")
+
+[node name="Panel" type="NinePatchRect" parent="."]
+texture_filter = 1
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = 20.0
+offset_bottom = -20.0
+grow_vertical = 2
+texture = ExtResource("2_spritesheet")
+region_rect = Rect2(227, 162, 42, 44)
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderPanel" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="Header" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.918, 0.831, 0.667, 1)
+theme_override_font_sizes/font_size = 14
+text = "BUILD"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemList" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4

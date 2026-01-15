@@ -9,12 +9,20 @@ extends Sprite2D
 signal harvest_ready
 ## Emitted when the plant transitions to a new growth stage
 signal stage_changed(stage_index: int)
+## Emitted when the plant is harvested
+signal harvested(item_id: String, amount: int)
 
 ## Growth stage configuration
 ## Each entry is a dictionary with:
 ##   - "frame": int - The sprite frame index to display
 ##   - "duration": float - Time in seconds before advancing to next stage (0 = final stage)
 @export var growth_stages: Array[Dictionary] = []
+
+## Harvest Configuration
+@export var harvest_item_id: String = ""
+@export var harvest_amount: int = 1
+@export var harvest_time: float = 0.5
+@export var regrows: bool = false
 
 ## Current growth stage index
 var current_stage: int = 0
@@ -87,3 +95,26 @@ func get_current_stage() -> int:
 func set_growth_stage(stage_index: int) -> void:
 	growth_timer.stop()
 	_apply_stage(clampi(stage_index, 0, growth_stages.size() - 1))
+
+## Harvest the plant
+func harvest() -> Dictionary:
+	if not is_harvest_ready() and not harvest_item_id.is_empty():
+		return {}
+		
+	var result = {
+		"item_id": harvest_item_id,
+		"amount": harvest_amount
+	}
+	
+	harvested.emit(harvest_item_id, harvest_amount)
+	
+	if regrows:
+		_apply_stage(0)
+	else:
+		# If it doesn't regrow, the caller (PlantingSystem) should queue_free it.
+		# But if we want to support non-destroying harvest (like interacting with a chest), 
+		# we might just want it to stay at the current stage?
+		# For now, let's assume if it doesn't regrow, it's consumed/removed by the system.
+		pass
+		
+	return result

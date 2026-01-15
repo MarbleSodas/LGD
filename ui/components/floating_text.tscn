@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://c5djy0s6uvaro"]
+
+[ext_resource type="FontFile" uid="uid://ds16mvr7tyx3t" path="res://assets/sproutlands/fonts/pixelFont-7-8x14-sproutLands.ttf" id="1_font"]
+[ext_resource type="Script" uid="uid://cg4in8l4v4nmg" path="res://ui/components/floating_text.gd" id="2_script"]
+
+[node name="FloatingText" type="Label"]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 10
+text = "+1 Dandelion"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("2_script")

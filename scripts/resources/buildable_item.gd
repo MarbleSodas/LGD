@@ -21,3 +21,7 @@ extends Resource
 
 ## Number of horizontal frames in the preview texture (for calculating frame width)
 @export var preview_hframes: int = 1
+
+## Dictionary of required materials: { "item_id": quantity }
+## Example: { "dandelion_tuft": 1 } means 1 dandelion tuft is needed to place this
+@export var build_costs: Dictionary = {}

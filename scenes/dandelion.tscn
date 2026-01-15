@@ -5,11 +5,21 @@
 
 [node name="Dandelion" type="Sprite2D"]
 texture = ExtResource("1_texture")
+offset = Vector2(0, -12)
 hframes = 3
 frame = 1
 script = ExtResource("2_script")
-growth_stages = [
-	{"frame": 1, "duration": 3.0},
-	{"frame": 2, "duration": 3.0},
-	{"frame": 0, "duration": 0.0}
-]
+growth_stages = [{
+"duration": 3.0,
+"frame": 1
+}, {
+"duration": 3.0,
+"frame": 2
+}, {
+"duration": 0.0,
+"frame": 0
+}]
+harvest_item_id = "dandelion_tuft"
+harvest_amount = 1
+harvest_time = 0.5
+regrows = true

@@ -1,0 +1,64 @@
+[gd_scene load_steps=7 format=3 uid="uid://bk4y2oam4k8l"]
+
+[ext_resource type="Script" uid="uid://c6j6wwn1v1ek3" path="res://scenes/start_menu/start_menu.gd" id="1_script"]
+[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://bowrncjr456bo" path="res://assets/sproutlands/Sprite sheets/UI Big Play Button.png" id="3_play_btn"]
+[ext_resource type="PackedScene" uid="uid://c5x8k2oam4j2" path="res://scenes/start_menu/world_list_panel.tscn" id="4_world_panel"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_play_normal"]
+atlas = ExtResource("3_play_btn")
+region = Rect2(3, 34, 90, 27)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_play_pressed"]
+atlas = ExtResource("3_play_btn")
+region = Rect2(99, 36, 90, 25)
+margin = Rect2(0, 0.5, 0, 0)
+
+[node name="StartMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.909804, 0.831373, 0.721569, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.419608, 0.301961, 0.321569, 1)
+theme_override_font_sizes/font_size = 64
+text = "LGD"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="TextureButton" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(288, 96)
+layout_mode = 2
+texture_normal = SubResource("AtlasTexture_play_normal")
+texture_pressed = SubResource("AtlasTexture_play_pressed")
+ignore_texture_size = true
+stretch_mode = 4
+
+[node name="WorldListPanel" parent="." instance=ExtResource("4_world_panel")]
+visible = false

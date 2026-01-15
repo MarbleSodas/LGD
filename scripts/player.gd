@@ -31,3 +31,6 @@ func _physics_process(_delta: float) -> void:
 		sprite.flip_h = direction.x > 0
 	
 	move_and_slide()
+
+func get_interact_area() -> Area2D:
+	return $InteractArea

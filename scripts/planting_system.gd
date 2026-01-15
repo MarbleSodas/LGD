@@ -7,7 +7,8 @@ extends Node2D
 
 ## Configuration
 @export var tile_size: Vector2 = Vector2(32, 32)
-@export var plant_offset: Vector2 = Vector2(0, -12)  # Offset from tile center
+@export var plant_offset: Vector2 = Vector2(0, 0)  # Offset from tile center (visual offset now handled by sprite)
+@export var preview_visual_offset: Vector2 = Vector2(0, -12) # Visual shift for preview to match plant sprite offset
 @export var preview_color_valid: Color = Color(0.5, 0.7, 1.0, 0.7)
 @export var preview_color_invalid: Color = Color(1.0, 0.3, 0.3, 0.7)
 
@@ -21,6 +22,8 @@ var tile_map: TileMapLayer
 var player: CharacterBody2D
 var hotbar: MarginContainer
 var delete_overlay: Control
+var bulk_cost_panel: Control
+var ysort_root: Node2D
 
 ## Preview sprite child
 var preview_sprite: Sprite2D
@@ -55,6 +58,22 @@ var bulk_delete_start_set: bool = false
 ## Visual configuration for bulk selection
 @export var bulk_start_marker_color: Color = Color(0.2, 1.0, 0.2, 0.9)  # Bright green outline for Point A
 
+## Interaction Configuration
+@export var interact_highlight_color: Color = Color(1.0, 1.0, 0.0, 1.0) # Yellow for out of range or not ready
+@export var interact_ready_color: Color = Color(0.0, 1.0, 0.0, 1.0)    # Green for ready
+@export var interact_building_color: Color = Color(0.3, 0.5, 1.0, 1.0) # Blue for buildings
+
+## Interaction resources
+var floating_text_scene = preload("res://ui/components/floating_text.tscn")
+var progress_bar_scene = preload("res://ui/components/harvest_progress_bar.tscn")
+
+## Interaction state
+var interact_area: Area2D
+var is_harvesting: bool = false
+var harvest_timer: float = 0.0
+var harvest_target: Node2D = null
+var current_progress_bar: Control = null
+
 ## Tile source IDs in the TileSet
 const GRASS_SOURCE_ID: int = 0
 const GRASS_CLEAR_SOURCE_ID: int = 1
@@ -71,6 +90,7 @@ func _setup_preview_sprite() -> void:
 	preview_sprite.name = "PreviewSprite"
 	preview_sprite.visible = false
 	preview_sprite.z_index = 100  # Render above tiles
+	preview_sprite.offset = preview_visual_offset
 	add_child(preview_sprite)
 
 
@@ -80,16 +100,28 @@ func _find_references() -> void:
 	if not tile_map:
 		push_error("PlantingSystem: TileMapLayer not found!")
 	
-	# Find Player (sibling, named "Hana")
-	player = get_parent().get_node_or_null("Hana") as CharacterBody2D
+	# Find YSortRoot (sibling, contains player and plants)
+	ysort_root = get_parent().get_node_or_null("YSortRoot") as Node2D
+	if not ysort_root:
+		push_error("PlantingSystem: YSortRoot not found!")
+	
+	# Find Player (now inside YSortRoot)
+	if ysort_root:
+		player = ysort_root.get_node_or_null("Hana") as CharacterBody2D
 	if not player:
 		push_error("PlantingSystem: Player (Hana) not found!")
+	else:
+		if player.has_method("get_interact_area"):
+			interact_area = player.get_interact_area()
+		else:
+			interact_area = player.get_node_or_null("InteractArea")
 	
 	# Find Hotbar (in UI CanvasLayer)
 	var ui := get_parent().get_node_or_null("UI") as CanvasLayer
 	if ui:
 		hotbar = ui.get_node_or_null("Hotbar") as MarginContainer
 		delete_overlay = ui.get_node_or_null("DeleteModeOverlay")
+		bulk_cost_panel = ui.get_node_or_null("BulkCostPanel")
 	if not hotbar:
 		push_error("PlantingSystem: Hotbar not found!")
 
@@ -116,7 +148,11 @@ func _on_active_buildable_changed(item: BuildableItem) -> void:
 		_load_preview_texture()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# Handle harvest progress
+	if is_harvesting:
+		_process_harvest(delta)
+
 	# Delete mode processing
 	if delete_mode:
 		_update_delete_preview()
@@ -124,9 +160,7 @@ func _process(_delta: float) -> void:
 
 	if BuildRegistry.active_buildable == null:
 		preview_sprite.visible = false
-		if show_grid:
-			show_grid = false
-			queue_redraw()
+		_update_interaction_preview()
 		return
 	
 	_update_preview()
@@ -143,8 +177,32 @@ func _draw() -> void:
 			_draw_delete_grid()
 	elif bulk_start_set:
 		_draw_bulk_selection()
-	else:
+	elif BuildRegistry.active_buildable != null:
 		_draw_normal_grid()
+	elif hovered_plant and not delete_mode:
+		_draw_interaction_highlight()
+
+func _draw_interaction_highlight() -> void:
+	if not hovered_plant or not is_instance_valid(hovered_plant):
+		return
+		
+	var tile_pos = tile_map.map_to_local(hovered_tile)
+	var in_range = _is_plant_in_range(hovered_plant)
+	var color: Color
+
+	# Check if this is a harvestable plant or an interactable building
+	if hovered_plant.has_method("is_harvest_ready"):
+		# It's a plant - check harvest readiness and range
+		var is_harvestable = hovered_plant.is_harvest_ready()
+		if is_harvestable and in_range:
+			color = interact_ready_color      # Green - ready to harvest!
+		else:
+			color = interact_highlight_color  # Yellow - not ready or out of range
+	else:
+		# It's a building/interactable - use blue
+		color = interact_building_color
+	
+	_draw_tile_outline(tile_pos, color)
 
 
 func _draw_normal_grid() -> void:
@@ -199,16 +257,28 @@ func _draw_bulk_selection() -> void:
 	)
 	
 	# First pass: Check if WHOLE area is valid
+	var tile_count := 0
 	var is_whole_area_valid := true
 	for x in range(min_tile.x, max_tile.x + 1):
 		for y in range(min_tile.y, max_tile.y + 1):
+			tile_count += 1
 			var tile_coords := Vector2i(x, y)
 			var world_pos := tile_map.map_to_local(tile_coords)
-			if not _check_can_place(tile_coords, world_pos):
+			if occupied_tiles.has(tile_coords) or _overlaps_player(world_pos):
 				is_whole_area_valid = false
 				break
 		if not is_whole_area_valid:
 			break
+	
+	# Check affordability for entire bulk placement
+	var can_afford := _can_afford_placement(tile_count)
+	if not can_afford:
+		is_whole_area_valid = false
+	
+	# Update bulk cost panel
+	if bulk_cost_panel and bulk_cost_panel.has_method("update_costs"):
+		var item = BuildRegistry.active_buildable
+		bulk_cost_panel.update_costs(item, tile_count, can_afford)
 	
 	# Draw preview on each tile in the selection
 	for x in range(min_tile.x, max_tile.x + 1):
@@ -277,7 +347,7 @@ func _draw_preview_at(world_pos: Vector2, color: Color) -> void:
 	var src_rect := Rect2(frame_width * preview_sprite.frame, 0, frame_width, texture.get_height())
 	
 	# Calculate destination position (centered, with plant offset)
-	var draw_pos := to_local(world_pos + plant_offset)
+	var draw_pos := to_local(world_pos + plant_offset) + preview_visual_offset
 	var dest_rect := Rect2(
 		draw_pos - Vector2(frame_width / 2.0, texture.get_height() / 2.0),
 		Vector2(frame_width, texture.get_height())
@@ -397,6 +467,34 @@ func _check_can_place(tile_coords: Vector2i, world_pos: Vector2) -> bool:
 	if _overlaps_player(world_pos):
 		return false
 	
+	# Check 3: Player can afford (for single placement)
+	if not bulk_start_set and not _can_afford_placement(1):
+		return false
+	
+	return true
+
+
+func _can_afford_placement(count: int = 1) -> bool:
+	var item = BuildRegistry.active_buildable
+	if item == null or item.build_costs.is_empty():
+		return true
+	
+	for material_id in item.build_costs:
+		var required = item.build_costs[material_id] * count
+		if Inventory.count_item(material_id) < required:
+			return false
+	return true
+
+
+func _consume_materials(count: int = 1) -> bool:
+	var item = BuildRegistry.active_buildable
+	if item == null or item.build_costs.is_empty():
+		return true
+	
+	for material_id in item.build_costs:
+		var required = item.build_costs[material_id] * count
+		if not Inventory.consume_item(material_id, required):
+			return false
 	return true
 
 
@@ -437,6 +535,16 @@ func _is_bulk_modifier_pressed() -> bool:
 
 
 func _input(event: InputEvent) -> void:
+	# Block harvesting in build mode or delete mode
+	var can_harvest = BuildRegistry.active_buildable == null and not delete_mode
+
+	if event.is_action_pressed("harvest"):
+		if can_harvest and hovered_plant and _is_plant_in_range(hovered_plant):
+			_start_harvest(hovered_plant)
+	elif event.is_action_released("harvest"):
+		if is_harvesting:
+			_cancel_harvest()
+
 	# Toggle delete mode with F key
 	if event.is_action_pressed("toggle_delete_mode"):
 		if delete_mode:
@@ -555,6 +663,10 @@ func _place_plant() -> void:
 	if not _check_can_place(tile_coords, snapped_pos):
 		return
 	
+	# Consume materials before placing
+	if not _consume_materials(1):
+		return
+	
 	_place_plant_at(tile_coords, snapped_pos)
 
 
@@ -570,8 +682,11 @@ func _place_plant_at(tile_coords: Vector2i, world_pos: Vector2) -> void:
 	var plant_instance := item.scene.instantiate() as Node2D
 	plant_instance.global_position = world_pos + plant_offset
 	
-	# Add to world (as sibling)
-	get_parent().add_child(plant_instance)
+	# Store the ID so we can save it later!
+	plant_instance.set_meta("buildable_id", item.id)
+	
+	# Add to YSortRoot for proper Y-sorting with player
+	ysort_root.add_child(plant_instance)
 	
 	# Track occupied tile
 	occupied_tiles[tile_coords] = plant_instance
@@ -581,12 +696,16 @@ func _set_bulk_start() -> void:
 	var mouse_pos := get_global_mouse_position()
 	bulk_start_tile = tile_map.local_to_map(mouse_pos)
 	bulk_start_set = true
+	if bulk_cost_panel:
+		bulk_cost_panel.show()
 	queue_redraw()
 
 
 func _cancel_bulk_mode() -> void:
 	bulk_start_set = false
 	bulk_start_tile = Vector2i.ZERO
+	if bulk_cost_panel:
+		bulk_cost_panel.hide()
 	queue_redraw()
 
 
@@ -608,15 +727,26 @@ func _place_bulk() -> void:
 		maxi(bulk_start_tile.y, end_tile.y)
 	)
 	
+	var tile_count := 0
+	
 	# Pass 1: Check validity of ALL tiles
 	for x in range(min_tile.x, max_tile.x + 1):
 		for y in range(min_tile.y, max_tile.y + 1):
+			tile_count += 1
 			var tile_coords := Vector2i(x, y)
 			var world_pos := tile_map.map_to_local(tile_coords)
-			if not _check_can_place(tile_coords, world_pos):
+			if occupied_tiles.has(tile_coords) or _overlaps_player(world_pos):
 				# Found an invalid tile, abort the entire placement
 				# Do NOT cancel bulk mode, so user can adjust selection
 				return
+	
+	# Check affordability
+	if not _can_afford_placement(tile_count):
+		return
+	
+	# Consume materials for all tiles at once
+	if not _consume_materials(tile_count):
+		return
 	
 	# Pass 2: Place on all tiles (we know they are all valid now)
 	for x in range(min_tile.x, max_tile.x + 1):
@@ -697,3 +827,239 @@ func _execute_bulk_delete() -> void:
 		_delete_plant_at(tile_coords)
 	
 	_cancel_bulk_delete()
+
+# === INTERACTION LOGIC ===
+
+func _update_interaction_preview() -> void:
+	if not tile_map:
+		return
+		
+	var mouse_pos := get_global_mouse_position()
+	var tile_coords := tile_map.local_to_map(mouse_pos)
+	
+	# Only update if changed tile to avoid unnecessary redraws
+	if tile_coords != hovered_tile:
+		hovered_tile = tile_coords
+		var plant = occupied_tiles.get(tile_coords)
+		
+		# Reset highlight if moved to new tile
+		if plant != hovered_plant:
+			_clear_plant_highlight()
+			hovered_plant = plant
+		
+		# Show grid only if hovering a plant
+		show_grid = (hovered_plant != null)
+		queue_redraw()
+	
+	# Update grid center for drawing
+	current_tile_center = tile_map.map_to_local(tile_coords)
+
+	# Always redraw if hovering a plant/object so player movement updates range status immediately
+	if hovered_plant:
+		queue_redraw()
+	
+	# If currently harvesting, check if we moved away or out of range
+	if is_harvesting:
+		if harvest_target != hovered_plant or not _is_plant_in_range(harvest_target):
+			_cancel_harvest()
+
+	# Auto-harvest if holding the key and hovering a valid plant
+	if Input.is_action_pressed("harvest") and hovered_plant and not is_harvesting:
+		if _is_plant_in_range(hovered_plant):
+			_start_harvest(hovered_plant)
+
+func _is_plant_in_range(plant: Node2D) -> bool:
+	if not plant or not is_instance_valid(plant) or not interact_area:
+		return false
+	
+	# Check if plant's position is within the InteractArea
+	# Since InteractArea is an Area2D on the player, we can check overlap
+	# But checking point inside Area2D manually is tricky with shapes.
+	# Easier: Check distance to player
+	# InteractArea radius is ~36. Tile is 32. 
+	# Let's use distance check for simplicity as we have the player reference
+	
+	# Or better, use the Area2D.overlaps_body / overlaps_area if the plant had a collision shape.
+	# But plants don't have collision shapes usually (they are sprites).
+	# So manual distance check against InteractArea's collision shape radius is best.
+	
+	var interact_shape = interact_area.get_child(0) as CollisionShape2D
+	if interact_shape and interact_shape.shape is CircleShape2D:
+		var radius = interact_shape.shape.radius
+		var distance = plant.global_position.distance_to(interact_area.global_position)
+		# Add a bit of buffer (tile size/2) since we measure from center
+		return distance <= (radius + 16.0)
+		
+	return false
+
+func _start_harvest(plant: Node2D) -> void:
+	if is_harvesting: 
+		return
+		
+	if not plant.has_method("harvest"):
+		return
+		
+	# Check if harvestable (ready)
+	if plant.has_method("is_harvest_ready") and not plant.is_harvest_ready():
+		return
+		
+	is_harvesting = true
+	harvest_target = plant
+	harvest_timer = 0.0
+	
+	# Create progress bar
+	_create_progress_bar(plant)
+
+func _create_progress_bar(plant: Node2D) -> void:
+	if current_progress_bar:
+		current_progress_bar.queue_free()
+		
+	current_progress_bar = progress_bar_scene.instantiate()
+	add_child(current_progress_bar)
+	current_progress_bar.global_position = plant.global_position + Vector2(-12, 16) # Below plant
+	current_progress_bar.visible = true
+
+func _cancel_harvest() -> void:
+	is_harvesting = false
+	harvest_target = null
+	harvest_timer = 0.0
+	if current_progress_bar:
+		current_progress_bar.queue_free()
+		current_progress_bar = null
+
+func _process_harvest(delta: float) -> void:
+	if not harvest_target or not is_instance_valid(harvest_target):
+		_cancel_harvest()
+		return
+		
+	var required_time = harvest_target.get("harvest_time") if "harvest_time" in harvest_target else 0.5
+	harvest_timer += delta
+	
+	if current_progress_bar:
+		if current_progress_bar.has_method("update_progress"):
+			current_progress_bar.update_progress(harvest_timer, required_time)
+		else:
+			current_progress_bar.max_value = required_time
+			current_progress_bar.value = harvest_timer
+			
+	if harvest_timer >= required_time:
+		_complete_harvest()
+
+func _complete_harvest() -> void:
+	var plant = harvest_target
+	_cancel_harvest() # Reset state first
+	
+	if not plant or not is_instance_valid(plant):
+		return
+		
+	# Perform harvest
+	var dropped_items = plant.harvest()
+	
+	if dropped_items.is_empty():
+		return
+		
+	var item_id = dropped_items.get("item_id", "")
+	var amount = dropped_items.get("amount", 1)
+	
+	# Add to inventory
+	if Inventory and ItemRegistry:
+		var item = ItemRegistry.get_item(item_id)
+		if item:
+			Inventory.add_item(item, amount)
+			_spawn_floating_text(plant.global_position, "+%d %s" % [amount, item.display_name])
+	
+	# Plant regrowth handled in plant.gd logic (it resets itself)
+	# If plant does NOT regrow (queue_free called), we need to update occupied_tiles
+	if not is_instance_valid(plant) or plant.is_queued_for_deletion():
+		# Find the tile this plant was on (we know hovered_tile, but better be safe)
+		var tile_loc = occupied_tiles.find_key(plant)
+		if tile_loc:
+			occupied_tiles.erase(tile_loc)
+			tile_map.set_cell(tile_loc, GRASS_SOURCE_ID, Vector2i.ZERO)
+
+func _spawn_floating_text(pos: Vector2, text: String) -> void:
+	var popup = floating_text_scene.instantiate()
+	get_parent().add_child(popup)
+	popup.global_position = pos + Vector2(0, -20)
+	if popup.has_method("set_text_content"):
+		popup.set_text_content(text)
+	else:
+		popup.text = text
+
+# --- Save/Load Support ---
+
+func to_save_data() -> Dictionary:
+	var plants_data = []
+	
+	for tile_coords in occupied_tiles:
+		var plant = occupied_tiles[tile_coords]
+		if not is_instance_valid(plant):
+			continue
+			
+		var plant_data = {
+			"x": tile_coords.x,
+			"y": tile_coords.y,
+		}
+		
+		# If the plant instance has a 'buildable_id' property, use that.
+		if plant.has_meta("buildable_id"):
+			plant_data["buildable_id"] = plant.get_meta("buildable_id")
+		else:
+			# Fallback or skip if we can't identify it
+			continue
+			
+		# Save growth state if applicable
+		if plant.get("current_stage") != null:
+			plant_data["stage"] = plant.current_stage
+			
+		# Check timer
+		var timer = plant.get("growth_timer")
+		if timer and timer is Timer and not timer.is_stopped():
+			plant_data["timer_left"] = timer.time_left
+			
+		plants_data.append(plant_data)
+		
+	return {
+		"plants": plants_data
+	}
+
+func from_save_data(data: Dictionary) -> void:
+	if not data.has("plants"):
+		return
+		
+	for plant_data in data["plants"]:
+		var tile_coords = Vector2i(plant_data["x"], plant_data["y"])
+		var buildable_id = plant_data.get("buildable_id", "")
+		
+		if buildable_id == "":
+			continue
+			
+		var item = BuildRegistry.get_item(buildable_id)
+		if not item:
+			continue
+			
+		# Place the plant
+		var world_pos = tile_map.map_to_local(tile_coords)
+		
+		# Set tile to Clear
+		tile_map.set_cell(tile_coords, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
+		
+		# Spawn
+		var plant_instance = item.scene.instantiate() as Node2D
+		plant_instance.global_position = world_pos + plant_offset
+		
+		# Store ID for future saving
+		plant_instance.set_meta("buildable_id", buildable_id)
+		
+		ysort_root.add_child(plant_instance)
+		occupied_tiles[tile_coords] = plant_instance
+		
+		# Restore state
+		if plant_data.has("stage") and plant_instance.has_method("set_growth_stage"):
+			plant_instance.set_growth_stage(int(plant_data["stage"]))
+			
+		# Restore timer if valid
+		if plant_data.has("timer_left") and plant_data["timer_left"] > 0:
+			var timer = plant_instance.get("growth_timer")
+			if timer and timer is Timer:
+				timer.start(plant_data["timer_left"])

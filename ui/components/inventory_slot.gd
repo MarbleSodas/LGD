@@ -73,10 +73,35 @@ func _on_inventory_changed(slot: int, _item: InventoryItem, _count: int) -> void
 		_update_display()
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			slot_clicked.emit(slot_index)
-			get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton and event.pressed:
+		if not Inventory:
+			return
+			
+		var holding = Inventory.is_holding_item()
+		
+		match event.button_index:
+			MOUSE_BUTTON_LEFT:
+				if holding:
+					# Place items (Swap or Merge)
+					Inventory.place_item(slot_index)
+				else:
+					# Pick up items
+					Inventory.pickup_item(slot_index)
+				
+				get_viewport().set_input_as_handled()
+				
+			MOUSE_BUTTON_RIGHT:
+				if Input.is_key_pressed(KEY_SHIFT) and not holding:
+					# Shift + Right Click = Pick up half
+					Inventory.pickup_half(slot_index)
+				elif holding:
+					# Right Click while holding = Place one
+					Inventory.place_one(slot_index)
+				else:
+					# Right Click = Pick up one
+					Inventory.pickup_one(slot_index)
+				
+				get_viewport().set_input_as_handled()
 
 func _on_mouse_entered() -> void:
 	_is_hovered = true

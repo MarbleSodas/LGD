@@ -1,0 +1,267 @@
+[gd_scene load_steps=10 format=3 uid="uid://c5x8k2oam4j2"]
+
+[ext_resource type="Script" uid="uid://calh7qgffqgim" path="res://scenes/start_menu/world_list_panel.gd" id="1_script"]
+[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://fehv37qh25xd" path="res://assets/sproutlands/Sprite sheets/Setting menu.png" id="3_bg"]
+[ext_resource type="Texture2D" uid="uid://de6jkq8r2h2qo" path="res://assets/sproutlands/Sprite sheets/Icons/All Icons.png" id="4_c4fhr"]
+[ext_resource type="Texture2D" uid="uid://dmgbroo803ukr" path="res://assets/sproutlands/Sprite sheets/Dialouge UI/dialog box big.png" id="5_dialog"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_panel"]
+atlas = ExtResource("3_bg")
+region = Rect2(138, 12, 106, 122)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close"]
+atlas = ExtResource("4_c4fhr")
+region = Rect2(66, 34, 12, 12)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close_pressed"]
+atlas = ExtResource("4_c4fhr")
+region = Rect2(66, 34, 12, 12)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dialog_bg"]
+atlas = ExtResource("5_dialog")
+region = Rect2(0, 0, 176, 48)
+
+[node name="WorldListPanel" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="ColorRect" type="ColorRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.431373)
+
+[node name="Panel" type="NinePatchRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -200.0
+offset_right = 150.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_panel")
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="Control/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Control/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Control/Panel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "SELECT WORLD"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="TextureButton" parent="Control/Panel/MarginContainer/VBoxContainer/Header"]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+texture_normal = SubResource("AtlasTexture_close")
+texture_pressed = SubResource("AtlasTexture_close_pressed")
+stretch_mode = 0
+
+[node name="HSeparator" type="HSeparator" parent="Control/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Control/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="WorldList" type="VBoxContainer" parent="Control/Panel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="HSeparator2" type="HSeparator" parent="Control/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Footer" type="HBoxContainer" parent="Control/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="NewWorldButton" type="Button" parent="Control/Panel/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "NEW WORLD"
+
+[node name="NewWorldDialog" type="Control" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="Control/NewWorldDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.470588)
+
+[node name="DialogPanel" type="NinePatchRect" parent="Control/NewWorldDialog"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -60.0
+offset_right = 120.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_dialog_bg")
+patch_margin_left = 16
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/NewWorldDialog"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -40.0
+offset_right = 100.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Control/NewWorldDialog/VBoxContainer"]
+layout_mode = 2
+text = "Enter World Name:"
+horizontal_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="Control/NewWorldDialog/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "New World"
+alignment = 1
+max_length = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/NewWorldDialog/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="Control/NewWorldDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Cancel"
+
+[node name="CreateButton" type="Button" parent="Control/NewWorldDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Create"
+
+[node name="DeleteConfirmDialog" type="Control" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Bg" type="ColorRect" parent="Control/DeleteConfirmDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.470588)
+
+[node name="DialogPanel" type="NinePatchRect" parent="Control/DeleteConfirmDialog"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -60.0
+offset_right = 120.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_dialog_bg")
+patch_margin_left = 16
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/DeleteConfirmDialog"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -40.0
+offset_right = 100.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Control/DeleteConfirmDialog/VBoxContainer"]
+layout_mode = 2
+text = "Delete this world?"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/DeleteConfirmDialog/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="Control/DeleteConfirmDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Cancel"
+
+[node name="DeleteButton" type="Button" parent="Control/DeleteConfirmDialog/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "Delete"

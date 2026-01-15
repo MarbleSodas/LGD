@@ -1,3 +1,4 @@
+@tool
 extends NinePatchRect
 
 signal clicked(item: BuildableItem)
@@ -5,7 +6,7 @@ signal hotkey_bind_requested(item: BuildableItem, slot: int)
 
 @onready var icon_rect: TextureRect = $MarginContainer/HBoxContainer/IconBackground/Icon
 @onready var name_label: Label = $MarginContainer/HBoxContainer/VBoxContainer/NameLabel
-@onready var hotkey_badge: Label = $MarginContainer/HBoxContainer/VBoxContainer/HotkeyBadge
+@onready var cost_container: HBoxContainer = $MarginContainer/HBoxContainer/VBoxContainer/CostContainer
 
 var buildable_item: BuildableItem
 var _is_hovered: bool = false
@@ -16,24 +17,25 @@ var _hover_texture = preload("res://ui/resources/atlas/build_menu/slot_hover.tre
 var _selected_texture = preload("res://ui/resources/atlas/build_menu/slot_selected.tres")
 
 func _ready() -> void:
+	# Initialize visual state immediately
+	_update_visual_state()
+	
 	# Set up mouse handling
 	mouse_filter = MouseFilter.MOUSE_FILTER_STOP
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	
-	# Connect to registry to update hotkey badge
-	if BuildRegistry:
-		BuildRegistry.hotbar_changed.connect(_on_hotbar_changed)
+	# Autoloads (Inventory) are not available in the editor
+	if not Engine.is_editor_hint() and Inventory:
+		Inventory.inventory_changed.connect(_on_inventory_changed)
 	
-	_update_hotkey_badge()
-
 func setup(item: BuildableItem) -> void:
 	buildable_item = item
 	if icon_rect and item.icon:
 		icon_rect.texture = item.icon
 	if name_label:
 		name_label.text = item.display_name
-	_update_hotkey_badge()
+	_update_cost_display()
 
 func _on_mouse_entered() -> void:
 	_is_hovered = true
@@ -71,22 +73,52 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				break
 
-func _on_hotbar_changed(_slot: int, _item: BuildableItem) -> void:
-	_update_hotkey_badge()
+func _on_inventory_changed(_slot: int, _item: InventoryItem, _count: int) -> void:
+	_update_cost_display()
 
-func _update_hotkey_badge() -> void:
-	if not buildable_item or not hotkey_badge:
+func _update_cost_display() -> void:
+	if not cost_container or not buildable_item:
 		return
-		
-	if not BuildRegistry:
+	
+	# Clear existing cost items
+	for child in cost_container.get_children():
+		child.queue_free()
+	
+	if buildable_item.build_costs.is_empty():
 		return
+	
+	for material_id in buildable_item.build_costs:
+		var required = buildable_item.build_costs[material_id]
+		var available = Inventory.count_item(material_id) if Inventory else 0
+		var item_data = ItemRegistry.get_item(material_id) if ItemRegistry else null
 		
-	var slot = BuildRegistry.get_slot_for_item(buildable_item)
-	if slot != -1:
-		var display_num = str(slot + 1)
-		if slot == 9:
-			display_num = "0"
-		hotkey_badge.text = "[" + display_num + "]"
-		hotkey_badge.visible = true
-	else:
-		hotkey_badge.visible = false
+		# Create a container for this cost item
+		var item_hbox = HBoxContainer.new()
+		item_hbox.add_theme_constant_override("separation", 2)
+		
+		# Set tooltip to item name
+		if item_data:
+			item_hbox.tooltip_text = item_data.display_name
+		
+		# Icon
+		if item_data and item_data.icon:
+			var icon = TextureRect.new()
+			icon.texture = item_data.icon
+			icon.custom_minimum_size = Vector2(16, 16)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			item_hbox.add_child(icon)
+		
+		# Count
+		var label = Label.new()
+		label.text = str(required)
+		label.add_theme_font_size_override("font_size", 14)
+		
+		# Color based on affordability
+		if available >= required:
+			label.add_theme_color_override("font_color", Color(0.4, 0.298, 0.22, 1)) # Normal brown text
+		else:
+			label.add_theme_color_override("font_color", Color(0.8, 0.2, 0.2, 1)) # Red warning
+			
+		item_hbox.add_child(label)
+		cost_container.add_child(item_hbox)

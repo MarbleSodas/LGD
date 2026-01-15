@@ -5,6 +5,9 @@ const PANEL_WIDTH: float = 230.0
 
 @onready var panel: NinePatchRect = $Panel
 @onready var grid: GridContainer = $Panel/MarginContainer/VBoxContainer/ScrollContainer/GridContainer
+@onready var sort_button: Button = $Panel/MarginContainer/VBoxContainer/Footer/SortButton
+@onready var cursor_preview: TextureRect = $HeldItemCursor
+@onready var cursor_label: Label = $HeldItemCursor/CountLabel
 
 var InventorySlotScene = preload("res://ui/components/inventory_slot.tscn")
 var is_open: bool = false
@@ -12,21 +15,49 @@ var _tween: Tween
 
 func _ready() -> void:
 	# Initial state: Closed (Off-screen right)
-	# Since anchors are set to right (1.0), offsets 0 to 230 places it just outside the right edge
 	panel.offset_left = 0
 	panel.offset_right = PANEL_WIDTH
 	
 	_populate_slots()
 	
-	# Connect to inventory expansion
 	if Inventory:
 		Inventory.slots_expanded.connect(_on_slots_expanded)
+		Inventory.held_item_changed.connect(_on_held_item_changed)
+		
+		# specific check in case we reloaded scene while holding something
+		var held = Inventory.get_held_item()
+		if held.has("item") and held.item != null:
+			_on_held_item_changed(held.item, held.count)
+	
+	sort_button.pressed.connect(_on_sort_pressed)
+	
+	cursor_preview.visible = false
+	cursor_preview.size = Vector2(48, 48) # Match slot size
+	mouse_filter = MouseFilter.MOUSE_FILTER_IGNORE
+
+func _process(_delta: float) -> void:
+	if cursor_preview.visible:
+		cursor_preview.global_position = get_global_mouse_position() - (cursor_preview.size / 2.0)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_inventory"):
+		if Inventory and Inventory.is_holding_item():
+			Inventory.return_held_item()
 		toggle()
-	elif event.is_action_pressed("ui_cancel") and is_open:
-		close()
+	elif event.is_action_pressed("ui_cancel"):
+		if Inventory and Inventory.is_holding_item():
+			Inventory.return_held_item()
+		elif is_open:
+			close()
+
+func _gui_input(event: InputEvent) -> void:
+	# Detect clicks outside the panel when holding an item to return it
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if Inventory and Inventory.is_holding_item():
+			var global_mouse = get_global_mouse_position()
+			if not panel.get_global_rect().has_point(global_mouse):
+				Inventory.return_held_item()
+				get_viewport().set_input_as_handled()
 
 func toggle() -> void:
 	if is_open:
@@ -51,6 +82,10 @@ func close() -> void:
 	if not is_open: return
 	is_open = false
 	
+	# Force return held item when closing
+	if Inventory:
+		Inventory.return_held_item()
+	
 	if _tween: _tween.kill()
 	_tween = create_tween()
 	_tween.set_ease(Tween.EASE_IN)
@@ -74,15 +109,29 @@ func _add_slot(index: int) -> void:
 	var slot = InventorySlotScene.instantiate()
 	grid.add_child(slot)
 	slot.slot_index = index
-	slot.slot_clicked.connect(_on_slot_clicked)
-
-func _on_slot_clicked(index: int) -> void:
-	# For now, just print the slot clicked
-	# Future: implement item selection, drag-drop, etc.
-	print("Inventory slot clicked: ", index)
+	# slot_clicked signal is no longer needed as slots handle their own input
 
 func _on_slots_expanded(new_max: int) -> void:
 	# Add new slots when inventory expands
 	var current_count = grid.get_child_count()
 	for i in range(current_count, new_max):
 		_add_slot(i)
+
+func _on_held_item_changed(item: InventoryItem, count: int) -> void:
+	if item and count > 0:
+		cursor_preview.texture = item.icon
+		cursor_label.text = str(count)
+		cursor_label.visible = count > 1
+		cursor_preview.visible = true
+		cursor_preview.global_position = get_global_mouse_position() - (cursor_preview.size / 2.0)
+		
+		# Block mouse clicks to the world while holding an item
+		mouse_filter = MouseFilter.MOUSE_FILTER_STOP
+	else:
+		cursor_preview.visible = false
+		# Let mouse clicks pass through to the world when not holding anything
+		mouse_filter = MouseFilter.MOUSE_FILTER_IGNORE
+
+func _on_sort_pressed() -> void:
+	if Inventory:
+		Inventory.sort_inventory()

@@ -17,3 +17,6 @@ scene = ExtResource("3_scene")
 preview_texture = ExtResource("2_icon")
 preview_frame = 2
 preview_hframes = 3
+build_costs = {
+"dandelion_tuft": 1
+}

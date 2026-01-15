@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://c5x8k2n9m4j1"]
+[gd_scene load_steps=5 format=3 uid="uid://c5x8k2n9m4j1"]
 
 [ext_resource type="Script" path="res://ui/components/hotbar_slot.gd" id="1_slot"]
 [ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_tex"]
+[ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_default"]
 atlas = ExtResource("2_tex")
@@ -15,6 +16,7 @@ offset_bottom = 48.0
 texture = SubResource("AtlasTexture_default")
 expand_mode = 1
 stretch_mode = 5
+theme = ExtResource("3_theme")
 script = ExtResource("1_slot")
 
 [node name="ItemIcon" type="TextureRect" parent="."]

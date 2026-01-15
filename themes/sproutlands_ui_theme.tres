@@ -1,0 +1,46 @@
+[gd_resource type="Theme" load_steps=6 format=3 uid="uid://beisgsnx4rkgk"]
+
+[ext_resource type="FontFile" uid="uid://ds16mvr7tyx3t" path="res://assets/sproutlands/fonts/pixelFont-7-8x14-sproutLands.ttf" id="1_font"]
+[ext_resource type="Texture2D" uid="uid://bowrncjr456bo" path="res://assets/sproutlands/Sprite sheets/UI Big Play Button.png" id="2_btn"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_normal"]
+texture = ExtResource("2_btn")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+region_rect = Rect2(0, 0, 96, 32)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_hover"]
+texture = ExtResource("2_btn")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+region_rect = Rect2(0, 0, 96, 32)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_pressed"]
+texture = ExtResource("2_btn")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+region_rect = Rect2(96, 0, 96, 32)
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 14
+Button/colors/font_color = Color(0.3, 0.25, 0.2, 1)
+Button/colors/font_hover_color = Color(0.35, 0.3, 0.25, 1)
+Button/colors/font_pressed_color = Color(0.25, 0.2, 0.15, 1)
+Button/styles/focus = SubResource("StyleBoxTexture_btn_normal")
+Button/styles/hover = SubResource("StyleBoxTexture_btn_hover")
+Button/styles/normal = SubResource("StyleBoxTexture_btn_normal")
+Button/styles/pressed = SubResource("StyleBoxTexture_btn_pressed")
+Label/colors/font_color = Color(0.2, 0.2, 0.2, 1)

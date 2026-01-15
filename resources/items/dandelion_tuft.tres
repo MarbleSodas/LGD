@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="InventoryItem" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/inventory_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://crxuyk4g05ifs" path="res://assets/objects/items/DandelionTuft.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "dandelion_tuft"
+display_name = "Dandelion Tuft"
+icon = ExtResource("2_icon")
+max_stack = 200
+description = "A soft tuft from a dandelion."
+category = "Material"

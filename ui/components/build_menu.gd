@@ -1,7 +1,7 @@
 extends Control
 
 const SLIDE_DURATION: float = 0.2
-const PANEL_WIDTH: float = 200.0
+const PANEL_WIDTH: float = 220.0
 
 @onready var panel: NinePatchRect = $Panel
 @onready var item_list: VBoxContainer = $Panel/MarginContainer/VBoxContainer/ScrollContainer/ItemList

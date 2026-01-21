@@ -83,6 +83,17 @@ func _ready() -> void:
 	_setup_preview_sprite()
 	_find_references()
 	_connect_signals()
+	_scan_existing_objects()
+
+func _scan_existing_objects() -> void:
+	if not ysort_root or not tile_map:
+		return
+		
+	for child in ysort_root.get_children():
+		if child is Plant or child is StorageBuilding:
+			var tile_coords = tile_map.local_to_map(child.global_position)
+			occupied_tiles[tile_coords] = child
+
 
 
 func _setup_preview_sprite() -> void:
@@ -198,8 +209,14 @@ func _draw_interaction_highlight() -> void:
 			color = interact_ready_color      # Green - ready to harvest!
 		else:
 			color = interact_highlight_color  # Yellow - not ready or out of range
+	elif hovered_plant is StorageBuilding:
+		# It's a storage building (barrel)
+		if in_range:
+			color = interact_building_color   # Blue - ready to open
+		else:
+			color = interact_highlight_color  # Yellow - out of range
 	else:
-		# It's a building/interactable - use blue
+		# It's a generic building/interactable - use blue
 		color = interact_building_color
 	
 	_draw_tile_outline(tile_pos, color)
@@ -347,7 +364,7 @@ func _draw_preview_at(world_pos: Vector2, color: Color) -> void:
 	var src_rect := Rect2(frame_width * preview_sprite.frame, 0, frame_width, texture.get_height())
 	
 	# Calculate destination position (centered, with plant offset)
-	var draw_pos := to_local(world_pos + plant_offset) + preview_visual_offset
+	var draw_pos := to_local(world_pos + plant_offset) + preview_sprite.offset
 	var dest_rect := Rect2(
 		draw_pos - Vector2(frame_width / 2.0, texture.get_height() / 2.0),
 		Vector2(frame_width, texture.get_height())
@@ -456,6 +473,25 @@ func _load_preview_texture() -> void:
 		preview_sprite.texture = item.preview_texture
 		preview_sprite.hframes = item.preview_hframes
 		preview_sprite.frame = item.preview_frame
+		
+		# Use item-specific offset if defined (non-zero), otherwise fallback to system default (or just use item's if we migrate everything)
+		# For backward compatibility with existing system config, we could add system default to item offset
+		# But better to just use item offset if we configure resources correctly.
+		# Let's use the item's offset directly + global adjustment if needed.
+		# System has `preview_visual_offset` default (0, -12).
+		# To support both without massive migration: use item offset + system offset? 
+		# No, that's confusing.
+		# Let's override the system offset if the item specifies one? 
+		# OR just set the preview_sprite.offset to item.preview_offset
+		
+		# Current system default was: preview_visual_offset = Vector2(0, -12)
+		# If we change code to use item.preview_offset, default is (0,0).
+		
+		# Logic: If item.preview_offset is different from ZERO (or maybe just use it), use it.
+		# But wait, Dandelion needs (0, -12). If I don't update Dandelion resource, it will be (0,0) and break.
+		
+		# I will update the resources.
+		preview_sprite.offset = item.preview_offset
 
 
 func _check_can_place(tile_coords: Vector2i, world_pos: Vector2) -> bool:
@@ -540,7 +576,7 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("harvest"):
 		if can_harvest and hovered_plant and _is_plant_in_range(hovered_plant):
-			_start_harvest(hovered_plant)
+			_interact_with_target(hovered_plant)
 	elif event.is_action_released("harvest"):
 		if is_harvesting:
 			_cancel_harvest()
@@ -680,7 +716,7 @@ func _place_plant_at(tile_coords: Vector2i, world_pos: Vector2) -> void:
 	
 	# Instantiate the plant
 	var plant_instance := item.scene.instantiate() as Node2D
-	plant_instance.global_position = world_pos + plant_offset
+	plant_instance.global_position = world_pos + plant_offset + item.placement_offset
 	
 	# Store the ID so we can save it later!
 	plant_instance.set_meta("buildable_id", item.id)
@@ -866,7 +902,9 @@ func _update_interaction_preview() -> void:
 	# Auto-harvest if holding the key and hovering a valid plant
 	if Input.is_action_pressed("harvest") and hovered_plant and not is_harvesting:
 		if _is_plant_in_range(hovered_plant):
-			_start_harvest(hovered_plant)
+			# Only auto-harvest plants, not buildings
+			if hovered_plant.has_method("harvest"):
+				_interact_with_target(hovered_plant)
 
 func _is_plant_in_range(plant: Node2D) -> bool:
 	if not plant or not is_instance_valid(plant) or not interact_area:
@@ -892,10 +930,20 @@ func _is_plant_in_range(plant: Node2D) -> bool:
 		
 	return false
 
-func _start_harvest(plant: Node2D) -> void:
+func _interact_with_target(target: Node2D) -> void:
 	if is_harvesting: 
 		return
 		
+	# Check for direct interaction (Buildings/Containers)
+	if target.has_method("interact"):
+		print("PlantingSystem: Calling interact() on target")
+		target.interact()
+		return
+		
+	# Fallback to harvest logic (Plants)
+	_start_harvest(target)
+
+func _start_harvest(plant: Node2D) -> void:
 	if not plant.has_method("harvest"):
 		return
 		
@@ -1017,6 +1065,10 @@ func to_save_data() -> Dictionary:
 		if timer and timer is Timer and not timer.is_stopped():
 			plant_data["timer_left"] = timer.time_left
 			
+		# Save container data if applicable
+		if plant.has_method("get_container"):
+			plant_data["container"] = plant.get_container().to_save_data()
+			
 		plants_data.append(plant_data)
 		
 	return {
@@ -1046,7 +1098,7 @@ func from_save_data(data: Dictionary) -> void:
 		
 		# Spawn
 		var plant_instance = item.scene.instantiate() as Node2D
-		plant_instance.global_position = world_pos + plant_offset
+		plant_instance.global_position = world_pos + plant_offset + item.placement_offset
 		
 		# Store ID for future saving
 		plant_instance.set_meta("buildable_id", buildable_id)
@@ -1063,3 +1115,7 @@ func from_save_data(data: Dictionary) -> void:
 			var timer = plant_instance.get("growth_timer")
 			if timer and timer is Timer:
 				timer.start(plant_data["timer_left"])
+		
+		# Restore container data
+		if plant_data.has("container") and plant_instance.has_method("get_container"):
+			plant_instance.get_container().from_save_data(plant_data["container"])

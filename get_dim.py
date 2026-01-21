@@ -21,7 +21,7 @@ def get_png_dimensions(file_path):
             
     return None
 
-dims = get_png_dimensions('assets/objects/Dandelion.png')
+dims = get_png_dimensions('assets/objects/plants/Dandelion.png')
 if dims:
     print(f"{dims[0]} {dims[1]}")
 else:

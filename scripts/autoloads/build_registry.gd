@@ -59,6 +59,10 @@ func _unlock_default_items() -> void:
 		unlock_item("dandelion")
 		# Assign to first slot by default for better UX
 		assign_to_hotbar(0, _all_items["dandelion"])
+		
+	if _all_items.has("barrel"):
+		unlock_item("barrel")
+		assign_to_hotbar(1, _all_items["barrel"])
 
 # --- Public API ---
 

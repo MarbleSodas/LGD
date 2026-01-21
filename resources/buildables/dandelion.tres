@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="BuildableItem" load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/resources/buildable_item.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/Dandelion.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/plants/Dandelion.png" id="2_icon"]
 [ext_resource type="PackedScene" path="res://scenes/dandelion.tscn" id="3_scene"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
@@ -17,6 +17,7 @@ scene = ExtResource("3_scene")
 preview_texture = ExtResource("2_icon")
 preview_frame = 2
 preview_hframes = 3
+preview_offset = Vector2(0, -12)
 build_costs = {
 "dandelion_tuft": 1
 }

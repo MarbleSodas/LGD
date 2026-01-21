@@ -29,7 +29,7 @@ func update_costs(buildable: BuildableItem, tile_count: int, can_afford: bool) -
 	
 	show()
 
-func _add_cost_item(item: InventoryItem, required: int, available: int, can_afford: bool) -> void:
+func _add_cost_item(item: InventoryItem, required: int, available: int, _can_afford: bool) -> void:
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)
 	

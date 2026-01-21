@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d5bipq1wj4on"
-path="res://.godot/imported/Dandelion.png-2a542784fcc4a703e0d5ed8c86ca6126.ctex"
+uid="uid://b4o0h1vqvol02"
+path="res://.godot/imported/Barrel.png-4749f2eb3e7b6eb7f9944648a33fc99e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/objects/Dandelion.png"
-dest_files=["res://.godot/imported/Dandelion.png-2a542784fcc4a703e0d5ed8c86ca6126.ctex"]
+source_file="res://assets/objects/buildings/Barrel.png"
+dest_files=["res://.godot/imported/Barrel.png-4749f2eb3e7b6eb7f9944648a33fc99e.ctex"]
 
 [params]
 

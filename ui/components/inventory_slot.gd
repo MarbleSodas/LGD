@@ -1,9 +1,12 @@
 extends NinePatchRect
 
-signal slot_clicked(index: int)
+
 signal slot_hovered(index: int)
 
 @export var slot_index: int = 0
+
+## Optional target inventory (for containers). If null, uses player Inventory.
+var target_inventory: Object = null
 
 @onready var item_icon: TextureRect = $ItemIcon
 @onready var stack_label: Label = $StackCount
@@ -25,7 +28,10 @@ func _ready() -> void:
 	mouse_exited.connect(_on_mouse_exited)
 	
 	# Connect to inventory changes
-	if Inventory:
+	if target_inventory:
+		if target_inventory.has_signal("slot_changed"):
+			target_inventory.slot_changed.connect(_on_inventory_changed)
+	elif Inventory:
 		Inventory.inventory_changed.connect(_on_inventory_changed)
 	
 	# Initial update
@@ -59,10 +65,14 @@ func set_item(item_texture: Texture2D, count: int = 0) -> void:
 		stack_label.visible = false
 
 func _update_display() -> void:
-	if not Inventory:
-		return
+	var slot_data = null
 	
-	var slot_data = Inventory.get_slot(slot_index)
+	if target_inventory:
+		if target_inventory.has_method("get_slot"):
+			slot_data = target_inventory.get_slot(slot_index)
+	elif Inventory:
+		slot_data = Inventory.get_slot(slot_index)
+	
 	if slot_data != null and slot_data.item != null:
 		set_item(slot_data.item.icon, slot_data.count)
 	else:
@@ -79,29 +89,151 @@ func _gui_input(event: InputEvent) -> void:
 			
 		var holding = Inventory.is_holding_item()
 		
+		# If using player inventory, delegate to Inventory autoload
+		if target_inventory == null:
+			match event.button_index:
+				MOUSE_BUTTON_LEFT:
+					if not holding and Input.is_key_pressed(KEY_SHIFT):
+						_handle_player_shift_transfer()
+					elif holding:
+						Inventory.place_item(slot_index)
+					else:
+						Inventory.pickup_item(slot_index)
+					get_viewport().set_input_as_handled()
+					
+				MOUSE_BUTTON_RIGHT:
+					if Input.is_key_pressed(KEY_SHIFT) and not holding:
+						Inventory.pickup_half(slot_index)
+					elif holding:
+						Inventory.place_one(slot_index)
+					else:
+						Inventory.pickup_one(slot_index)
+					get_viewport().set_input_as_handled()
+			return
+
+		# --- External Inventory Logic ---
+		
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
-				if holding:
-					# Place items (Swap or Merge)
-					Inventory.place_item(slot_index)
+				if not holding and Input.is_key_pressed(KEY_SHIFT):
+					_handle_external_shift_transfer()
+				elif holding:
+					# Place items into container
+					_handle_external_place()
 				else:
-					# Pick up items
-					Inventory.pickup_item(slot_index)
-				
+					# Pick up items from container
+					_handle_external_pickup()
 				get_viewport().set_input_as_handled()
 				
 			MOUSE_BUTTON_RIGHT:
-				if Input.is_key_pressed(KEY_SHIFT) and not holding:
-					# Shift + Right Click = Pick up half
-					Inventory.pickup_half(slot_index)
-				elif holding:
-					# Right Click while holding = Place one
-					Inventory.place_one(slot_index)
+				if holding:
+					# Place one into container
+					_handle_external_place_one()
 				else:
-					# Right Click = Pick up one
-					Inventory.pickup_one(slot_index)
-				
+					# Pick up one/half from container
+					if Input.is_key_pressed(KEY_SHIFT):
+						_handle_external_pickup_half()
+					else:
+						_handle_external_pickup_one()
 				get_viewport().set_input_as_handled()
+
+func _handle_external_pickup() -> void:
+	var slot_data = target_inventory.get_slot(slot_index)
+	if slot_data == null or slot_data.item == null:
+		return
+		
+	Inventory.set_held_item_external(slot_data.item, slot_data.count)
+	target_inventory.set_slot(slot_index, null, 0)
+
+func _handle_external_place() -> void:
+	var held = Inventory.get_held_item()
+	var held_item = held.item
+	var held_count = held.count
+	
+	var slot_data = target_inventory.get_slot(slot_index)
+	
+	# Case 1: Empty slot
+	if slot_data == null or slot_data.item == null:
+		target_inventory.set_slot(slot_index, held_item, held_count)
+		Inventory.clear_held_item_external() # Clear hand without returning to inventory
+		return
+		
+	# Case 2: Same item -> Merge
+	if slot_data.item.id == held_item.id:
+		var space = slot_data.item.max_stack - slot_data.count
+		if space > 0:
+			var to_add = min(held_count, space)
+			target_inventory.set_slot(slot_index, slot_data.item, slot_data.count + to_add)
+			
+			var remaining = held_count - to_add
+			# Clear held item FIRST to prevent duplication when set_held_item_external calls return_held_item
+			Inventory.clear_held_item_external()
+			if remaining > 0:
+				Inventory.set_held_item_external(held_item, remaining)
+		return
+		
+	# Case 3: Different item -> Swap
+	var temp_item = slot_data.item
+	var temp_count = slot_data.count
+	
+	# Clear held item FIRST to prevent duplication when set_held_item_external calls return_held_item
+	Inventory.clear_held_item_external()
+	target_inventory.set_slot(slot_index, held_item, held_count)
+	Inventory.set_held_item_external(temp_item, temp_count)
+
+func _handle_external_pickup_one() -> void:
+	var slot_data = target_inventory.get_slot(slot_index)
+	if slot_data == null or slot_data.item == null:
+		return
+		
+	# Take 1
+	Inventory.set_held_item_external(slot_data.item, 1)
+	
+	if slot_data.count > 1:
+		target_inventory.set_slot(slot_index, slot_data.item, slot_data.count - 1)
+	else:
+		target_inventory.set_slot(slot_index, null, 0)
+
+func _handle_external_pickup_half() -> void:
+	var slot_data = target_inventory.get_slot(slot_index)
+	if slot_data == null or slot_data.item == null:
+		return
+		
+	var total = slot_data.count
+	var take = ceili(total / 2.0)
+	
+	Inventory.set_held_item_external(slot_data.item, take)
+	
+	if total - take > 0:
+		target_inventory.set_slot(slot_index, slot_data.item, total - take)
+	else:
+		target_inventory.set_slot(slot_index, null, 0)
+
+func _handle_external_place_one() -> void:
+	var held = Inventory.get_held_item()
+	var held_item = held.item
+	var held_count = held.count
+	
+	var slot_data = target_inventory.get_slot(slot_index)
+	
+	# Case 1: Empty slot
+	if slot_data == null or slot_data.item == null:
+		target_inventory.set_slot(slot_index, held_item, 1)
+		# Clear held item FIRST to prevent duplication when set_held_item_external calls return_held_item
+		Inventory.clear_held_item_external()
+		if held_count > 1:
+			Inventory.set_held_item_external(held_item, held_count - 1)
+		return
+		
+	# Case 2: Same item -> Add 1
+	if slot_data.item.id == held_item.id:
+		if slot_data.count < slot_data.item.max_stack:
+			target_inventory.set_slot(slot_index, slot_data.item, slot_data.count + 1)
+			# Clear held item FIRST to prevent duplication when set_held_item_external calls return_held_item
+			Inventory.clear_held_item_external()
+			if held_count > 1:
+				Inventory.set_held_item_external(held_item, held_count - 1)
+
 
 func _on_mouse_entered() -> void:
 	_is_hovered = true
@@ -111,3 +243,34 @@ func _on_mouse_entered() -> void:
 func _on_mouse_exited() -> void:
 	_is_hovered = false
 	_update_texture()
+
+func _handle_player_shift_transfer() -> void:
+	var slot_data = Inventory.get_slot(slot_index)
+	if slot_data == null or slot_data.item == null:
+		return
+		
+	# Find open container
+	var container_panel = get_tree().get_first_node_in_group("container_panel")
+	if container_panel and container_panel.get("is_open") and container_panel.current_container:
+		var item = slot_data.item
+		var count = slot_data.count
+		
+		# Try to add to container
+		var added = container_panel.current_container.add_item_quantity(item, count)
+		
+		if added > 0:
+			Inventory.remove_item(slot_index, added)
+
+func _handle_external_shift_transfer() -> void:
+	var slot_data = target_inventory.get_slot(slot_index)
+	if slot_data == null or slot_data.item == null:
+		return
+		
+	var item = slot_data.item
+	var count = slot_data.count
+	
+	# Try to add to player inventory
+	var added = Inventory.add_item_quantity(item, count)
+	
+	if added > 0:
+		target_inventory.remove_item(slot_index, added)

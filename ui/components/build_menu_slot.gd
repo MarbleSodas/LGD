@@ -14,7 +14,7 @@ var _is_hovered: bool = false
 # Preload slot textures
 var _normal_texture = preload("res://ui/resources/atlas/build_menu/slot_normal.tres")
 var _hover_texture = preload("res://ui/resources/atlas/build_menu/slot_hover.tres")
-var _selected_texture = preload("res://ui/resources/atlas/build_menu/slot_selected.tres")
+# var _selected_texture = preload("res://ui/resources/atlas/build_menu/slot_selected.tres")
 
 func _ready() -> void:
 	# Initialize visual state immediately

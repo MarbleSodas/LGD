@@ -14,6 +14,7 @@ var is_open: bool = false
 var _tween: Tween
 
 func _ready() -> void:
+	add_to_group("inventory_panel")
 	# Initial state: Closed (Off-screen right)
 	panel.offset_left = 0
 	panel.offset_right = PANEL_WIDTH
@@ -33,6 +34,8 @@ func _ready() -> void:
 	
 	cursor_preview.visible = false
 	cursor_preview.size = Vector2(48, 48) # Match slot size
+	cursor_preview.z_index = 100 # Ensure cursor is always on top of other UI panels
+	cursor_preview.top_level = true # Render independently from parent hierarchy
 	mouse_filter = MouseFilter.MOUSE_FILTER_IGNORE
 
 func _process(_delta: float) -> void:
@@ -44,11 +47,6 @@ func _input(event: InputEvent) -> void:
 		if Inventory and Inventory.is_holding_item():
 			Inventory.return_held_item()
 		toggle()
-	elif event.is_action_pressed("ui_cancel"):
-		if Inventory and Inventory.is_holding_item():
-			Inventory.return_held_item()
-		elif is_open:
-			close()
 
 func _gui_input(event: InputEvent) -> void:
 	# Detect clicks outside the panel when holding an item to return it

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/Dandelion.png" id="1_texture"]
-[ext_resource type="Script" path="res://scripts/plant.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/plants/Dandelion.png" id="1_texture"]
+[ext_resource type="Script" uid="uid://c7dbd8oirvn7d" path="res://scripts/plant.gd" id="2_script"]
 
 [node name="Dandelion" type="Sprite2D"]
 texture = ExtResource("1_texture")

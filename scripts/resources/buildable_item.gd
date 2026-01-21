@@ -22,6 +22,12 @@ extends Resource
 ## Number of horizontal frames in the preview texture (for calculating frame width)
 @export var preview_hframes: int = 1
 
+## Offset for the preview sprite relative to the tile center
+@export var preview_offset: Vector2 = Vector2.ZERO
+
+## Offset for the actual placed object relative to the tile center
+@export var placement_offset: Vector2 = Vector2.ZERO
+
 ## Dictionary of required materials: { "item_id": quantity }
-## Example: { "dandelion_tuft": 1 } means 1 dandelion tuft is needed to place this
 @export var build_costs: Dictionary = {}
+

@@ -91,6 +91,49 @@ func add_item(item: InventoryItem, count: int = 1) -> int:
 	
 	return -1
 
+## Add items and return the number of items successfully added
+func add_item_quantity(item: InventoryItem, count: int) -> int:
+	if item == null or count <= 0:
+		return 0
+	
+	var remaining = count
+	var total_added = 0
+	
+	# 1. Stack with existing
+	if item.max_stack > 1:
+		for i in range(_max_slots):
+			if _slots[i] != null and _slots[i].item.id == item.id:
+				var space = item.max_stack - _slots[i].count
+				if space > 0:
+					var to_add = min(remaining, space)
+					_slots[i].count += to_add
+					remaining -= to_add
+					total_added += to_add
+					inventory_changed.emit(i, _slots[i].item, _slots[i].count)
+					
+					if remaining <= 0:
+						item_added.emit(item, i, count) # Emit total added for simplicity or batch? 
+						# existing add_item emits per completion or partial. 
+						# Let's emit for the whole operation if possible or keep consistent.
+						return total_added
+	
+	# 2. Empty slots
+	while remaining > 0:
+		var empty_slot = get_first_empty_slot()
+		if empty_slot == -1:
+			break
+		
+		var to_add = min(remaining, item.max_stack)
+		_slots[empty_slot] = {item = item, count = to_add}
+		remaining -= to_add
+		total_added += to_add
+		inventory_changed.emit(empty_slot, item, to_add)
+	
+	if total_added > 0:
+		item_added.emit(item, -1, total_added) # -1 slot generic emission
+		
+	return total_added
+
 ## Remove items from a specific slot. Returns {item, count} of what was removed.
 func remove_item(slot: int, count: int = 1) -> Dictionary:
 	if slot < 0 or slot >= _max_slots or _slots[slot] == null:
@@ -439,6 +482,22 @@ func _clear_held_item() -> void:
 	_held_count = 0
 	_held_source_slot = -1
 	held_item_changed.emit(null, 0)
+
+## Clear held item without returning to inventory (for external transfers where item was already placed)
+func clear_held_item_external() -> void:
+	_clear_held_item()
+
+## Set the held item from an external source (e.g., container)
+## This clears the source slot tracking so returning it will try to add to player inventory
+func set_held_item_external(item: InventoryItem, count: int) -> void:
+	if is_holding_item():
+		return_held_item()
+		
+	_held_item = item
+	_held_count = count
+	_held_source_slot = -1 # External source, so return to player inventory by default
+	
+	held_item_changed.emit(_held_item, _held_count)
 
 ## Sort inventory by category, then ID, then count
 func sort_inventory() -> void:

@@ -1,6 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://c5g4alt8k5oih"]
+[gd_scene load_steps=5 format=3 uid="uid://b8q4y501x2w3"]
 
-[ext_resource type="Script" uid="uid://dxcadt17b4jvv" path="res://ui/components/inventory_panel.gd" id="1_panel"]
+[ext_resource type="Script" path="res://ui/components/container_panel.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
 [ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
 
@@ -9,7 +9,7 @@ bg_color = Color(0.639, 0.463, 0.337, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 
-[node name="InventoryPanel" type="Control"]
+[node name="ContainerPanel" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,8 +17,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme = ExtResource("3_theme")
-script = ExtResource("1_panel")
+script = ExtResource("1_script")
 
 [node name="Panel" type="NinePatchRect" parent="."]
 texture_filter = 1
@@ -61,11 +60,11 @@ custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_header")
 
-[node name="Header" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.918, 0.831, 0.667, 1)
 theme_override_font_sizes/font_size = 14
-text = "INVENTORY"
+text = "CONTAINER"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
@@ -82,7 +81,7 @@ columns = 4
 
 [node name="Footer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-alignment = 2
+theme_override_constants/separation = 8
 
 [node name="SortButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/Footer"]
 texture_filter = 1
@@ -90,27 +89,11 @@ layout_mode = 2
 theme = ExtResource("3_theme")
 text = "Sort"
 
-[node name="HeldItemCursor" type="TextureRect" parent="."]
-visible = false
-layout_mode = 0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
+[node name="Spacer" type="Control" parent="Panel/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="CountLabel" type="Label" parent="HeldItemCursor"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -23.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 14
-text = "1"
-horizontal_alignment = 2
-vertical_alignment = 2
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+theme = ExtResource("3_theme")
+text = "Close"

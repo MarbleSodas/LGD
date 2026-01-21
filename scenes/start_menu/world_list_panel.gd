@@ -59,14 +59,14 @@ func _on_new_world_pressed() -> void:
 	name_input.grab_focus()
 
 func _on_create_confirmed() -> void:
-	var name = name_input.text.strip_edges()
-	if name.is_empty():
+	var world_name = name_input.text.strip_edges()
+	if world_name.is_empty():
 		return
 		
-	if name.length() > 20:
-		name = name.substr(0, 20)
+	if world_name.length() > 20:
+		world_name = world_name.substr(0, 20)
 		
-	var id = SaveManager.create_world(name)
+	var id = SaveManager.create_world(world_name)
 	if id != "":
 		new_world_dialog.hide()
 		_on_load_world(id)

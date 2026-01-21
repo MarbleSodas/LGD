@@ -28,7 +28,43 @@ func _notification(what: int) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_return_to_menu()
+		if _close_any_open_ui():
+			get_viewport().set_input_as_handled()
+			return
+			
+		# Toggle Pause Menu
+		var ui_layer = get_node_or_null("UI") # Assuming UI is a child named "UI"
+		if not ui_layer:
+			# Try to find it in the scene tree if not a direct child
+			ui_layer = get_tree().get_first_node_in_group("ui_layer")
+			
+		if ui_layer:
+			var pause_menu = ui_layer.get_node_or_null("PauseMenu")
+			if pause_menu and not pause_menu.visible:
+				pause_menu.open()
+				get_viewport().set_input_as_handled()
+
+func _close_any_open_ui() -> bool:
+	# 1. High Priority: Return held item (Global action)
+	# Check if Inventory singleton exists and has items
+	if Inventory and Inventory.is_holding_item():
+		Inventory.return_held_item()
+		return true
+
+	var ui_layer = get_node_or_null("UI") # Assuming UI is a child named "UI"
+	if not ui_layer:
+		# Try to find it in the scene tree if not a direct child
+		ui_layer = get_tree().get_first_node_in_group("ui_layer")
+	
+	if ui_layer:
+		# 2. Container Panel (Topmost UI)
+		var container = ui_layer.get_node_or_null("ContainerPanel")
+		if container and container.get("is_open"):
+			container.close()
+			return true
+			
+	return false
+
 
 func _on_auto_save() -> void:
 	if GameState.current_world_id != "":

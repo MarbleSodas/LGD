@@ -54,7 +54,7 @@ sprite_frames = SubResource("SpriteFrames_2hs0m")
 animation = &"idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -4.5)
+position = Vector2(0, -3.5)
 shape = SubResource("RectangleShape2D_4flbx")
 
 [node name="InteractArea" type="Area2D" parent="."]

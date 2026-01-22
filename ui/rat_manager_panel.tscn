@@ -1,0 +1,96 @@
+[gd_scene load_steps=5 format=3 uid="uid://rat_manager_panel"]
+
+[ext_resource type="Script" path="res://ui/rat_manager_panel.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_bg"]
+[ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.639216, 0.462745, 0.337255, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="RatManagerPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_script")
+
+[node name="Panel" type="NinePatchRect" parent="."]
+custom_minimum_size = Vector2(250, 160)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -125.0
+offset_top = 20.0
+offset_right = 125.0
+offset_bottom = 180.0
+grow_horizontal = 2
+texture = ExtResource("2_bg")
+region_rect = Rect2(227, 162, 42, 44)
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderPanel" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.917647, 0.831373, 0.666667, 1)
+theme_override_font_sizes/font_size = 14
+text = "RAT MANAGER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SourcesLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Sources: 0 / 10"
+horizontal_alignment = 1
+
+[node name="OutputLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Output: None"
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.35, 0.3, 1)
+theme_override_font_sizes/font_size = 10
+text = "L-Click: Manage | R-Click: Output
+Ctrl+Drag: Bulk"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Close"

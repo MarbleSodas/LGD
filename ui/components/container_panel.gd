@@ -11,6 +11,7 @@ const PANEL_WIDTH: float = 230.0
 
 var InventorySlotScene = preload("res://ui/components/inventory_slot.tscn")
 var current_container: ContainerInventory = null
+var source_building: Node2D = null
 var is_open: bool = false
 var _tween: Tween
 
@@ -32,11 +33,12 @@ func _on_sort_pressed() -> void:
 	if current_container:
 		current_container.sort_inventory()
 
-func open(container: ContainerInventory, title: String = "Container") -> void:
+func open(container: ContainerInventory, title: String = "Container", building: Node2D = null) -> void:
 	if container == null:
 		return
 		
 	current_container = container
+	source_building = building
 	title_label.text = title.to_upper()
 	
 	_populate_container_slots()
@@ -77,6 +79,10 @@ func close() -> void:
 	if not is_open: return
 	is_open = false
 	current_container = null
+	
+	if source_building and source_building.has_method("on_ui_closed"):
+		source_building.on_ui_closed()
+	source_building = null
 	
 	# Return any held item to player inventory
 	if Inventory and Inventory.is_holding_item():

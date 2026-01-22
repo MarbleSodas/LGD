@@ -28,6 +28,9 @@ extends Resource
 ## Offset for the actual placed object relative to the tile center
 @export var placement_offset: Vector2 = Vector2.ZERO
 
+## If true, ignores the system-wide plant_offset/preview_visual_offset
+@export var ignore_system_offset: bool = false
+
 ## Dictionary of required materials: { "item_id": quantity }
 @export var build_costs: Dictionary = {}
 

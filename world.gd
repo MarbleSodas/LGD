@@ -63,6 +63,12 @@ func _close_any_open_ui() -> bool:
 			container.close()
 			return true
 			
+		# 3. Rat Manager Panel
+		var rat_panel = ui_layer.get_node_or_null("RatManagerPanel")
+		if rat_panel and rat_panel.visible:
+			rat_panel.close()
+			return true
+			
 	return false
 
 

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://cldm3fb28b4mw"]
+
+[ext_resource type="Script" uid="uid://bx7kpdiycpblp" path="res://scripts/rat_assistant.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ldyo5knukyo" path="res://Rat.png" id="2_texture"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rat"]
+radius = 6.0
+
+[node name="RatAssistant" type="CharacterBody2D"]
+collision_layer = 0
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_texture")
+offset = Vector2(0, -8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("CircleShape2D_rat")

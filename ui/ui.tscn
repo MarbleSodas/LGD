@@ -8,8 +8,9 @@
 [ext_resource type="PackedScene" path="res://ui/components/bulk_cost_panel.tscn" id="7_bulk_cost"]
 [ext_resource type="PackedScene" path="res://ui/components/container_panel.tscn" id="8_container"]
 [ext_resource type="PackedScene" uid="uid://dpausemenu001" path="res://ui/pause_menu.tscn" id="9_pause_menu"]
+[ext_resource type="PackedScene" uid="uid://rat_manager_panel" path="res://ui/rat_manager_panel.tscn" id="10_rat_panel"]
 
-[node name="UI" type="CanvasLayer"]
+[node name="UI" type="CanvasLayer" groups=["ui_layer"]]
 
 [node name="Hotbar" type="MarginContainer" parent="."]
 anchors_preset = 7
@@ -80,6 +81,9 @@ slot_index = 9
 [node name="ContainerPanel" parent="." instance=ExtResource("8_container")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("9_pause_menu")]
+visible = false
+
+[node name="RatManagerPanel" parent="." instance=ExtResource("10_rat_panel")]
 visible = false
 
 [editable path="Hotbar/HBoxContainer/Slot0"]

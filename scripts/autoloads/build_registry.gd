@@ -64,6 +64,14 @@ func _unlock_default_items() -> void:
 		unlock_item("barrel")
 		assign_to_hotbar(1, _all_items["barrel"])
 
+	if _all_items.has("mushroom_house"):
+		unlock_item("mushroom_house")
+		assign_to_hotbar(2, _all_items["mushroom_house"])
+
+	if _all_items.has("tree"):
+		unlock_item("tree")
+		assign_to_hotbar(3, _all_items["tree"])
+
 # --- Public API ---
 
 ## Get an item by ID

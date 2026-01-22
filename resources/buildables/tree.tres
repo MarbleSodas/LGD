@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildableItem" load_steps=5 format=3 uid="uid://diu2t80lbqytx"]
+
+[ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b60s5n4q0rddm" path="res://assets/objects/plants/Tree.png" id="2_icon"]
+[ext_resource type="PackedScene" uid="uid://dtgrdcoyqp6ij" path="res://scenes/tree.tscn" id="3_scene"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
+atlas = ExtResource("2_icon")
+region = Rect2(32, 0, 32, 64)
+
+[resource]
+script = ExtResource("1_script")
+id = "tree"
+display_name = "Tree"
+icon = SubResource("AtlasTexture_icon")
+scene = ExtResource("3_scene")
+preview_texture = ExtResource("2_icon")
+preview_frame = 1
+preview_hframes = 3
+preview_offset = Vector2(0, -16)
+placement_offset = Vector2(0, 16)
+ignore_system_offset = true

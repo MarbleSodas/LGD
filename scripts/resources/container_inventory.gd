@@ -146,6 +146,12 @@ func get_first_empty_slot() -> int:
 func is_full() -> bool:
 	return get_first_empty_slot() == -1
 
+func is_empty() -> bool:
+	for slot in _slots:
+		if slot != null:
+			return false
+	return true
+
 func count_item(item_id: String) -> int:
 	var total = 0
 	for slot_data in _slots:

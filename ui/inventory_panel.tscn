@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://inventory_panel_001"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" uid="uid://inventory_panel_script" path="res://ui/inventory_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://ui/inventory_panel.gd" id="1_script"]
 
 [node name="InventoryPanel" type="Control"]
 layout_mode = 3

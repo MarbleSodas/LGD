@@ -1,7 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://cldm3fb28b4mw"]
+[gd_scene load_steps=14 format=3 uid="uid://bookmc5mimnt1"]
 
 [ext_resource type="Script" uid="uid://bx7kpdiycpblp" path="res://scripts/rat_assistant.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://ldyo5knukyo" path="res://Rat.png" id="2_texture"]
+[ext_resource type="Texture2D" uid="uid://dcsh6hiuwh6k2" path="res://assets/objects/buildings/Rat.png" id="2_px8sg"]
+[ext_resource type="Script" uid="uid://bt0hopo7mmy55" path="res://scripts/rat/RatVisuals.gd" id="3_visuals"]
+[ext_resource type="Script" uid="uid://bk53cf33jp7on" path="res://scripts/rat/RatInventory.gd" id="4_inventory"]
+[ext_resource type="FontFile" uid="uid://dqtcmyslgqxwj" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="5_font"]
+[ext_resource type="Script" uid="uid://btv7456g47lm" path="res://scripts/components/StateMachine.gd" id="6_fsm"]
+[ext_resource type="Script" uid="uid://dyxg5tt34r6j6" path="res://scripts/rat/states/RatIdleState.gd" id="7_idle"]
+[ext_resource type="Script" uid="uid://cjmvea7gss341" path="res://scripts/rat/states/RatMoveToSourceState.gd" id="8_move"]
+[ext_resource type="Script" uid="uid://brhir5mnc6ll8" path="res://scripts/rat/states/RatHarvestState.gd" id="9_harvest"]
+[ext_resource type="Script" uid="uid://gimax85quln2" path="res://scripts/rat/states/RatMoveToOutputState.gd" id="10_move_out"]
+[ext_resource type="Script" uid="uid://puqdv8qyxvq0" path="res://scripts/rat/states/RatDepositState.gd" id="11_deposit"]
+[ext_resource type="Script" uid="uid://bhb26k33pvqfl" path="res://scripts/rat/states/RatReturnHomeState.gd" id="12_return"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rat"]
 radius = 6.0
@@ -11,10 +21,59 @@ collision_layer = 0
 collision_mask = 0
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_texture")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -2)
+shape = SubResource("CircleShape2D_rat")
+
+[node name="Visuals" type="Node2D" parent="." node_paths=PackedStringArray("body_sprite", "held_item_sprite", "count_label", "inventory")]
+script = ExtResource("3_visuals")
+body_sprite = NodePath("BodySprite")
+held_item_sprite = NodePath("HeldItemSprite")
+count_label = NodePath("CountLabel")
+inventory = NodePath("../Inventory")
+
+[node name="BodySprite" type="Sprite2D" parent="Visuals"]
+texture = ExtResource("2_px8sg")
 offset = Vector2(0, -8)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -4)
-shape = SubResource("CircleShape2D_rat")
+[node name="HeldItemSprite" type="Sprite2D" parent="Visuals"]
+z_index = 1
+position = Vector2(0, -18)
+scale = Vector2(0.6, 0.6)
+
+[node name="CountLabel" type="Label" parent="Visuals"]
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+offset_bottom = -20.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("4_inventory")
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("6_fsm")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("7_idle")
+
+[node name="Move" type="Node" parent="StateMachine"]
+script = ExtResource("8_move")
+
+[node name="Harvest" type="Node" parent="StateMachine"]
+script = ExtResource("9_harvest")
+
+[node name="MoveToOutput" type="Node" parent="StateMachine"]
+script = ExtResource("10_move_out")
+
+[node name="Deposit" type="Node" parent="StateMachine"]
+script = ExtResource("11_deposit")
+
+[node name="ReturnHome" type="Node" parent="StateMachine"]
+script = ExtResource("12_return")

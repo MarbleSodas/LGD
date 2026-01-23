@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://c5djy0s6uvaro"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="FontFile" uid="uid://ds16mvr7tyx3t" path="res://assets/sproutlands/fonts/pixelFont-7-8x14-sproutLands.ttf" id="1_font"]
-[ext_resource type="Script" uid="uid://cg4in8l4v4nmg" path="res://ui/components/floating_text.gd" id="2_script"]
+[ext_resource type="FontFile" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="1_font"]
+[ext_resource type="Script" path="res://ui/components/floating_text.gd" id="2_script"]
 
 [node name="FloatingText" type="Label"]
 offset_right = 40.0

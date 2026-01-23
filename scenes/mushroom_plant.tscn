@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/objects/plants/Mushroom.png" id="1_texture"]
+[ext_resource type="Script" path="res://scripts/plant.gd" id="2_script"]
+
+[node name="MushroomPlant" type="Sprite2D"]
+texture = ExtResource("1_texture")
+offset = Vector2(0, -12)
+hframes = 3
+script = ExtResource("2_script")
+growth_stages = [{
+"duration": 3.0,
+"frame": 0
+}, {
+"duration": 3.0,
+"frame": 1
+}, {
+"duration": 0.0,
+"frame": 2
+}]
+harvest_item_id = "shroom"
+harvest_amount = 1
+harvest_time = 0.5
+regrows = true

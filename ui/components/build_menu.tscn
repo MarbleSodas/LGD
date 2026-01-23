@@ -1,8 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://d3x1y2oam4k3"]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" uid="uid://cdqq1y7xwe6m4" path="res://ui/components/build_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
-[ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+[ext_resource type="Script" path="res://ui/components/build_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
+[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
 bg_color = Color(0.639, 0.463, 0.337, 1)

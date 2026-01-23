@@ -169,7 +169,6 @@ func sort_inventory() -> void:
 		if slot == null: continue
 		
 		# Try to merge with existing items in consolidated list
-		var merged = false
 		for existing in consolidated:
 			if existing.item.id == slot.item.id:
 				var space = existing.item.max_stack - existing.count
@@ -178,7 +177,6 @@ func sort_inventory() -> void:
 					existing.count += transfer
 					slot.count -= transfer
 					if slot.count <= 0:
-						merged = true
 						break
 		
 		# If items remain, add as new stack

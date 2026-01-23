@@ -51,7 +51,7 @@ func deactivate() -> void:
 	if delete_overlay: delete_overlay.hide_overlay()
 	queue_redraw()
 
-func update(delta: float) -> void:
+func update(_delta: float) -> void:
 	_update_preview()
 
 func _draw() -> void:

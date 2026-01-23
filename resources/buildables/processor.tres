@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildableItem" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/buildable_item.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/objects/buildings/processor/Processor_Full.png" id="2_icon"]
+[ext_resource type="PackedScene" path="res://scenes/processor_building.tscn" id="3_scene"]
+
+[resource]
+script = ExtResource("1_script")
+id = "processor"
+display_name = "Processor"
+icon = ExtResource("2_icon")
+scene = ExtResource("3_scene")
+preview_texture = ExtResource("2_icon")
+preview_frame = 0
+preview_hframes = 1
+preview_offset = Vector2(0, 0)
+placement_offset = Vector2(0, 0)
+ignore_system_offset = false
+build_costs = {
+"wood": 10
+}

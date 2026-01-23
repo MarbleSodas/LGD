@@ -5,6 +5,7 @@ extends Node2D
 ## Handles interaction to open the Rat Manager UI.
 
 const MAX_SOURCES = 10
+const MAX_OUTPUTS = 10
 const CHECK_INTERVAL = 1.0 # Check for work every second
 const FRONT_DOOR_OFFSET = Vector2(0, 20)
 
@@ -16,8 +17,8 @@ var tile_map: TileMapLayer
 
 # -- State --
 var assigned_sources: Array[Vector2i] = []
-var assigned_output: Vector2i = Vector2i.ZERO 
-var has_output: bool = false
+var assigned_outputs: Array[Vector2i] = []
+var _output_rr_index: int = 0
 var show_debug_visuals: bool = false
 var is_interacting: bool = false
 var hover_coords: Vector2i = Vector2i.MAX
@@ -119,8 +120,8 @@ func on_hover_exit() -> void:
 	if not is_interacting:
 		set_show_visuals(false)
 
-func set_show_visuals(show: bool) -> void:
-	show_debug_visuals = show
+func set_show_visuals(enabled: bool) -> void:
+	show_debug_visuals = enabled
 	queue_redraw()
 
 func _draw() -> void:
@@ -148,9 +149,9 @@ func _draw() -> void:
 		# Border
 		draw_rect(Rect2(pos - half_ts, ts), Color(0.8, 0.4, 1.0, 0.8), false, 2.0)
 		
-	# Draw output (Gold/Orange for Output)
-	if has_output:
-		var pos = to_local(tile_map.map_to_local(assigned_output))
+	# Draw outputs (Gold/Orange)
+	for out in assigned_outputs:
+		var pos = to_local(tile_map.map_to_local(out))
 		# Main fill
 		draw_rect(Rect2(pos - half_ts, ts), Color(1.0, 0.6, 0.0, 0.4), true)
 		# Border
@@ -159,36 +160,70 @@ func _draw() -> void:
 # --- Task Management ---
 
 func _assign_next_task() -> void:
-	if not has_output or not is_instance_valid(rat_instance): return 
+	if assigned_outputs.is_empty() or not is_instance_valid(rat_instance): return 
 	
 	# If rat is busy, don't interrupt unless we want to queue (not implemented yet)
 	if not rat_instance.is_available():
 		return
 		
-	# Validate output exists
-	if not _is_valid_output(assigned_output):
+	# Get next valid output using Round-Robin
+	var target_output = _get_next_valid_output()
+	if target_output == Vector2i.MAX:
 		return
 		
 	# Find best source relative to rat's current position
 	var best_source = _find_best_source(rat_instance.global_position)
 	if best_source != Vector2i.MAX:
-		rat_instance.assign_task(best_source, assigned_output)
+		rat_instance.assign_task(best_source, target_output)
 	# Else: no work found, rat stays idle
 
 ## Called by Rat when it finishes a harvest and wants more work nearby
 func assign_next_task_nearby(rat: RatAssistant) -> bool:
-	if not has_output: return false
-	if not _is_valid_output(assigned_output): return false
+	if assigned_outputs.is_empty(): return false
+	
+	var target_output = _get_next_valid_output()
+	if target_output == Vector2i.MAX: return false
 	
 	var best_source = _find_best_source(rat.global_position)
 	if best_source != Vector2i.MAX:
-		rat.assign_task(best_source, assigned_output)
+		rat.assign_task(best_source, target_output)
 		return true
 		
 	return false
 
+## Helper to get next output in Round-Robin fashion
+func _get_next_valid_output() -> Vector2i:
+	if assigned_outputs.is_empty(): return Vector2i.MAX
+	
+	# Try each output starting from current index
+	# This prevents getting stuck on an invalid output
+	for i in range(assigned_outputs.size()):
+		var idx = (_output_rr_index + i) % assigned_outputs.size()
+		var coords = assigned_outputs[idx]
+		
+		if _is_valid_output(coords) and not _is_output_full(coords):
+			# Found a valid one, update index for next time (pointing to the one AFTER this)
+			_output_rr_index = (idx + 1) % assigned_outputs.size()
+			return coords
+			
+	return Vector2i.MAX
+
+## Check if output container is full
+func _is_output_full(coords: Vector2i) -> bool:
+	if not planting_system: return true
+	var obj = planting_system.get_object_at(coords)
+	if not obj or not obj.has_method("get_container"): return true
+	
+	var container = obj.get_container()
+	if not container: return true
+	
+	if container.has_method("is_full"):
+		return container.is_full()
+		
+	return false
+
 ## Called by Rat when it becomes idle (e.g. after depositing)
-func on_rat_idle(rat: RatAssistant) -> void:
+func on_rat_idle(_rat: RatAssistant) -> void:
 	_assign_next_task()
 
 func _find_best_source(from_pos: Vector2) -> Vector2i:
@@ -280,26 +315,29 @@ func remove_source(coords: Vector2i) -> void:
 	assigned_sources.erase(coords)
 	queue_redraw()
 
-func set_output(coords: Vector2i) -> bool:
-	if not can_set_output(coords):
-		return false
+func toggle_output(coords: Vector2i) -> bool:
+	if coords in assigned_outputs:
+		assigned_outputs.erase(coords)
+		queue_redraw()
+		return true
 		
-	assigned_output = coords
-	has_output = true
-	queue_redraw()
-	return true
-
-func clear_output() -> void:
-	assigned_output = Vector2i.ZERO
-	has_output = false
-	queue_redraw()
+	if assigned_outputs.size() < MAX_OUTPUTS:
+		if can_set_output(coords):
+			assigned_outputs.append(coords)
+			queue_redraw()
+			return true
+			
+	return false
 
 func get_source_count() -> int:
 	return assigned_sources.size()
 
 func get_output_info() -> String:
-	if not has_output: return "None"
-	return "Tile (%d, %d)" % [assigned_output.x, assigned_output.y]
+	if assigned_outputs.is_empty(): return "None"
+	if assigned_outputs.size() == 1:
+		var out = assigned_outputs[0]
+		return "Tile (%d, %d)" % [out.x, out.y]
+	return "%d defined" % assigned_outputs.size()
 
 func get_rest_position() -> Vector2:
 	return global_position + FRONT_DOOR_OFFSET
@@ -307,11 +345,13 @@ func get_rest_position() -> Vector2:
 # --- Save/Load ---
 
 func get_save_data() -> Dictionary:
+	var output_data = []
+	for out in assigned_outputs:
+		output_data.append({"x": out.x, "y": out.y})
+
 	var data = {
 		"sources": [],
-		"output_x": assigned_output.x,
-		"output_y": assigned_output.y,
-		"has_output": has_output
+		"outputs": output_data
 	}
 	
 	for s in assigned_sources:
@@ -328,10 +368,15 @@ func load_save_data(data: Dictionary) -> void:
 		for s in data["sources"]:
 			assigned_sources.append(Vector2i(s["x"], s["y"]))
 			
-	if data.has("has_output"):
-		has_output = data["has_output"]
-		if has_output:
-			assigned_output = Vector2i(data.get("output_x", 0), data.get("output_y", 0))
+	assigned_outputs.clear()
+	if data.has("outputs"):
+		for out in data["outputs"]:
+			assigned_outputs.append(Vector2i(out["x"], out["y"]))
+	elif data.has("has_output") and data["has_output"]:
+		# Migration
+		var x = data.get("output_x", 0)
+		var y = data.get("output_y", 0)
+		assigned_outputs.append(Vector2i(x, y))
 			
 	if data.has("rat") and rat_instance:
 		rat_instance.load_save_data(data["rat"])

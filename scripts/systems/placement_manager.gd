@@ -62,7 +62,7 @@ func _setup_preview_sprite() -> void:
 
 func activate() -> void:
 	show_grid = true
-	_load_preview_texture()
+	refresh_preview()
 
 func deactivate() -> void:
 	show_grid = false
@@ -70,7 +70,7 @@ func deactivate() -> void:
 	_cancel_bulk_mode()
 	queue_redraw()
 
-func update(delta: float) -> void:
+func update(_delta: float) -> void:
 	# Called by parent _process if we prefer manual update, 
 	# but since we inherit Node2D, we can use _process if active.
 	_update_preview()
@@ -98,7 +98,7 @@ func _update_preview() -> void:
 	queue_redraw()
 	
 	if preview_sprite.texture == null:
-		_load_preview_texture()
+		refresh_preview()
 		
 	if bulk_start_set:
 		preview_sprite.visible = false
@@ -161,7 +161,7 @@ func _consume_materials(count: int) -> bool:
 			return false
 	return true
 
-func _load_preview_texture() -> void:
+func refresh_preview() -> void:
 	var item = BuildRegistry.active_buildable
 	if not item: return
 	
@@ -327,18 +327,18 @@ func _draw_bulk_selection() -> void:
 			
 			# Draw Texture
 			var draw_pos = to_local(w_pos + plant_offset) + preview_sprite.offset
-			var dest_rect = Rect2(draw_pos - Vector2(frame_w/2, preview_tex.get_height()/2), Vector2(frame_w, preview_tex.get_height()))
+			var dest_rect = Rect2(draw_pos - Vector2(frame_w/2, preview_tex.get_height()/2.0), Vector2(frame_w, preview_tex.get_height()))
 			draw_texture_rect_region(preview_tex, dest_rect, src_rect, col)
 
 func _draw_tile_outline(center: Vector2, color: Color) -> void:
 	var half = tile_size / 2.0
 	var local_center = to_local(center)
-	var tl = local_center + Vector2(-half.x, -half.y)
-	var tr = local_center + Vector2(half.x, -half.y)
-	var br = local_center + Vector2(half.x, half.y)
-	var bl = local_center + Vector2(-half.x, half.y)
+	var top_left = local_center + Vector2(-half.x, -half.y)
+	var top_right = local_center + Vector2(half.x, -half.y)
+	var bottom_right = local_center + Vector2(half.x, half.y)
+	var bottom_left = local_center + Vector2(-half.x, half.y)
 	
-	draw_line(tl, tr, color, grid_outline_width)
-	draw_line(tr, br, color, grid_outline_width)
-	draw_line(br, bl, color, grid_outline_width)
-	draw_line(bl, tl, color, grid_outline_width)
+	draw_line(top_left, top_right, color, grid_outline_width)
+	draw_line(top_right, bottom_right, color, grid_outline_width)
+	draw_line(bottom_right, bottom_left, color, grid_outline_width)
+	draw_line(bottom_left, top_left, color, grid_outline_width)

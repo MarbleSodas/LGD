@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ProcessorRecipe" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/processor_recipe.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/items/wood.tres" id="2_input"]
+[ext_resource type="Resource" path="res://resources/items/acorn.tres" id="3_output"]
+
+[resource]
+script = ExtResource("1_script")
+input_item = ExtResource("2_input")
+input_count = 2
+output_item = ExtResource("3_output")
+output_count = 1
+processing_time = 3.0

@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://dtgrdcoyqp6ij"]
+[gd_scene load_steps=4 format=3]
 
-[ext_resource type="Texture2D" uid="uid://b60s5n4q0rddm" path="res://assets/objects/plants/Tree.png" id="1_vplca"]
-[ext_resource type="Script" uid="uid://c53qudjv08t" path="res://scripts/tree.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/objects/plants/Tree.png" id="1_vplca"]
+[ext_resource type="Script" path="res://scripts/tree.gd" id="2_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tree"]
 size = Vector2(24, 14)
@@ -13,17 +13,17 @@ hframes = 3
 script = ExtResource("2_script")
 growth_stages = Array[Dictionary]([{
 "duration": 30.0,
-"frame": 1
+"frame": 0
 }, {
 "duration": 30.0,
-"frame": 2
+"frame": 1
 }, {
 "duration": 0.0,
-"frame": 0
+"frame": 2
 }])
 harvest_item_id = "wood"
 harvest_amount = 3
-harvest_time = 1.0
+harvest_time = 3.0
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 

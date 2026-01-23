@@ -1,8 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b8y1x2oam4k2"]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" uid="uid://culpf1kjsc3wv" path="res://ui/components/build_menu_slot.gd" id="1_slot"]
-[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
-[ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+[ext_resource type="Script" path="res://ui/components/build_menu_slot.gd" id="1_slot"]
+[ext_resource type="Texture2D" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
+[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
 [ext_resource type="Texture2D" path="res://ui/resources/atlas/build_menu/slot_normal.tres" id="4_6ifbw"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_slot_bg"]

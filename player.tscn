@@ -1,7 +1,7 @@
-[gd_scene load_steps=10 format=3 uid="uid://6yesugok0kny"]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="Texture2D" uid="uid://b8y3wkeanh4bo" path="res://assets/player/Player_Idle.png" id="1_4flbx"]
-[ext_resource type="Script" uid="uid://b6kr0rabe0ffd" path="res://scripts/player.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/player/Player_Idle.png" id="1_4flbx"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="2_script"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_onrkg"]
 atlas = ExtResource("1_4flbx")
@@ -68,6 +68,7 @@ shape = SubResource("CircleShape2D_onrkg")
 debug_color = Color(0.180392, 0.611765, 0.407843, 0.419608)
 
 [node name="Camera2D" type="Camera2D" parent="."]
+physics_interpolation_mode = 2
 zoom = Vector2(1.25, 1.25)
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0

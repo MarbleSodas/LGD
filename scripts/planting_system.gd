@@ -105,6 +105,7 @@ func set_mode(new_mode: Mode) -> void:
 func _on_buildable_changed(item: BuildableItem) -> void:
 	if item:
 		set_mode(Mode.PLACE)
+		placement_manager.refresh_preview()
 	else:
 		if current_mode == Mode.PLACE:
 			set_mode(Mode.NONE)

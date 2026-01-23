@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="InventoryItem" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/inventory_item.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/objects/items/Acorn.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "acorn"
+display_name = "Acorn"
+icon = ExtResource("2_icon")
+max_stack = 99
+description = "A small nut from a tree. Can be processed or planted."
+category = "Material"

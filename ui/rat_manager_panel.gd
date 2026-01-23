@@ -78,7 +78,7 @@ func _update_ui() -> void:
 	if not current_house: return
 	
 	sources_label.text = "Sources: %d / %d" % [current_house.get_source_count(), current_house.MAX_SOURCES]
-	output_label.text = "Output: %s" % current_house.get_output_info()
+	output_label.text = "Outputs: %s" % current_house.get_output_info()
 
 func _input(event: InputEvent) -> void:
 	if not visible or not current_house: return
@@ -88,7 +88,7 @@ func _input(event: InputEvent) -> void:
 		if panel.get_global_rect().has_point(get_global_mouse_position()):
 			return
 
-	# Handle Right Click (Set Output)
+	# Handle Right Click (Toggle Output)
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_handle_right_click(current_house.get_global_mouse_position())
 		get_viewport().set_input_as_handled()
@@ -139,5 +139,5 @@ func _handle_left_click(global_pos: Vector2) -> void:
 func _handle_right_click(global_pos: Vector2) -> void:
 	if not current_house or not current_house.tile_map: return
 	var coords = current_house.tile_map.local_to_map(global_pos)
-	current_house.set_output(coords)
+	current_house.toggle_output(coords)
 	_update_ui()

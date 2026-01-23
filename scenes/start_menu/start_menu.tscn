@@ -1,9 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://bk4y2oam4k8l"]
+[gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" uid="uid://c6j6wwn1v1ek3" path="res://scenes/start_menu/start_menu.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/start_menu/start_menu.gd" id="1_script"]
 [ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="2_theme"]
-[ext_resource type="Texture2D" uid="uid://bowrncjr456bo" path="res://assets/sproutlands/Sprite sheets/UI Big Play Button.png" id="3_play_btn"]
-[ext_resource type="PackedScene" uid="uid://c5x8k2oam4j2" path="res://scenes/start_menu/world_list_panel.tscn" id="4_world_panel"]
+[ext_resource type="Texture2D" path="res://assets/sproutlands/Sprite sheets/UI Big Play Button.png" id="3_play_btn"]
+[ext_resource type="PackedScene" path="res://scenes/start_menu/world_list_panel.tscn" id="4_world_panel"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_play_normal"]
 atlas = ExtResource("3_play_btn")

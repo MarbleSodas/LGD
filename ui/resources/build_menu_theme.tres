@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=2 format=3 uid="uid://b5tj7bha85yg5"]
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://b5tj7bha85yg5"]
+
+[ext_resource type="FontFile" uid="uid://dqtcmyslgqxwj" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.918, 0.831, 0.667, 0.95)
@@ -13,6 +15,8 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [resource]
+default_font = ExtResource("1_font")
+default_font_size = 14
 Label/colors/font_color = Color(0.4, 0.298, 0.22, 1)
 Label/colors/font_outline_color = Color(0.918, 0.831, 0.667, 1)
 Label/constants/outline_size = 0

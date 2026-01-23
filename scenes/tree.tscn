@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://dtgrdcoyqp6ij"]
 
 [ext_resource type="Texture2D" path="res://assets/objects/plants/Tree.png" id="1_vplca"]
 [ext_resource type="Script" path="res://scripts/tree.gd" id="2_script"]

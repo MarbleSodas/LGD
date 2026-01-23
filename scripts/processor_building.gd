@@ -167,8 +167,9 @@ func _try_complete_processing() -> void:
 		return
 	
 	# 3. Success! Consume input and produce output
-	input_inventory.remove_item(0, current_recipe.input_count)
-	output_inventory.add_item(current_recipe.output_item, current_recipe.output_count)
+	var recipe = current_recipe
+	input_inventory.remove_item(0, recipe.input_count)
+	output_inventory.add_item(recipe.output_item, recipe.output_count)
 	
 	_reset_to_idle()
 	

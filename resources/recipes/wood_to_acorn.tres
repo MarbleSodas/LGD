@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1_script")
 input_item = ExtResource("2_input")
-input_count = 2
+input_count = 1
 output_item = ExtResource("3_output")
 output_count = 1
 processing_time = 3.0

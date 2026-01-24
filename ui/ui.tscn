@@ -77,17 +77,17 @@ slot_index = 9
 
 [node name="DeleteModeOverlay" parent="." instance=ExtResource("6_overlay")]
 
-[node name="InventoryPanel" parent="." instance=ExtResource("5_inventory_panel")]
-
 [node name="ContainerPanel" parent="." instance=ExtResource("8_container")]
+
+[node name="ProcessorMenu" parent="." instance=ExtResource("11_processor_menu")]
+visible = false
+
+[node name="InventoryPanel" parent="." instance=ExtResource("5_inventory_panel")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("9_pause_menu")]
 visible = false
 
 [node name="RatManagerPanel" parent="." instance=ExtResource("10_rat_panel")]
-visible = false
-
-[node name="ProcessorMenu" parent="." instance=ExtResource("11_processor_menu")]
 visible = false
 
 [editable path="Hotbar/HBoxContainer/Slot0"]

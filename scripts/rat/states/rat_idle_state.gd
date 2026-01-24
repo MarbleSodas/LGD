@@ -8,13 +8,13 @@ var _idle_timer: float = 0.0
 
 func enter() -> void:
 	_idle_timer = 0.0
-	var rat = entity as RatAssistant
+	var rat: RatAssistant = entity as RatAssistant
 	if rat and rat.visuals:
 		rat.visuals.update_bob(0, false) # Reset bob
 
 func update(delta: float) -> void:
 	_idle_timer += delta
-	var rat = entity as RatAssistant
+	var rat: RatAssistant = entity as RatAssistant
 	if not rat: return
 	
 	# Bob reset effect

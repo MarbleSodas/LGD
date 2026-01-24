@@ -8,18 +8,18 @@ func enter() -> void:
 	pass
 
 func physics_update(delta: float) -> void:
-	var rat = entity as RatAssistant
+	var rat: RatAssistant = entity as RatAssistant
 	if not rat: return
 	
-	var destination = rat.target_position
-	var distance = rat.global_position.distance_to(destination)
+	var destination: Vector2 = rat.target_position
+	var distance: float = rat.global_position.distance_to(destination)
 	
 	if distance <= arrival_threshold:
 		rat.velocity = Vector2.ZERO
 		_on_arrived(rat)
 		return
 	
-	var direction = (destination - rat.global_position).normalized()
+	var direction: Vector2 = (destination - rat.global_position).normalized()
 	rat.velocity = direction * rat.move_speed
 	rat.move_and_slide()
 	
@@ -29,9 +29,17 @@ func physics_update(delta: float) -> void:
 
 func _on_arrived(rat: RatAssistant) -> void:
 	# Check availability
-	var plant = rat.planting_system.get_object_at(rat.target_coords) if rat.planting_system else null
+	var plant: Node2D = rat.planting_system.get_object_at(rat.target_coords) if rat.planting_system else null
 	
-	if not plant or not plant.has_method("harvest"):
+	# If empty tile AND we have items (presumably seeds), we might be here to plant
+	if not plant:
+		if rat.inventory.has_items():
+			transition_requested.emit(self, "plant")
+		else:
+			_handle_failure(rat)
+		return
+	
+	if not plant.has_method("harvest"):
 		_handle_failure(rat)
 		return
 		
@@ -50,5 +58,3 @@ func _handle_failure(rat: RatAssistant) -> void:
 		# The original code called assign_next_task_nearby from the house.
 		if rat.home_building and rat.home_building.has_method("assign_next_task_nearby"):
 			rat.home_building.assign_next_task_nearby(rat)
-		
-		# If we are still in idle after that, return home will trigger naturally from Idle state

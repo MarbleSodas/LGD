@@ -16,4 +16,6 @@ preview_hframes = 1
 preview_offset = Vector2(0, 0)
 placement_offset = Vector2(0, 0)
 ignore_system_offset = true
-build_costs = {}
+build_costs = {
+"shroom": 50
+}

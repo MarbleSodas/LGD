@@ -20,3 +20,6 @@ preview_hframes = 3
 preview_offset = Vector2(0, -16)
 placement_offset = Vector2(0, 16)
 ignore_system_offset = true
+build_costs = {
+"acorn": 1
+}

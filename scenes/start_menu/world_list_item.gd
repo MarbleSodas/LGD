@@ -16,34 +16,29 @@ func setup(data: Dictionary) -> void:
 	
 	name_label.text = world_name
 	
-	# Format date nicely if possible, or just show raw string
+	# Format date
 	var date_str = data["last_played"]
-	# Try to parse and reformat? For now, raw is okay-ish, or we can just say "Last played: ..."
-	date_label.text = "Last played: " + date_str.split("T")[0] # Just the date part
-	
-	delete_btn.hide() # Hidden by default, show on hover
+	if "T" in date_str:
+		date_label.text = "Last played: " + date_str.split("T")[0]
+	else:
+		date_label.text = "Last played: " + date_str
 
 func _ready() -> void:
 	# Connect signals
 	gui_input.connect(_on_gui_input)
-	mouse_entered.connect(_on_mouse_entered)
-	mouse_exited.connect(_on_mouse_exited)
-	
 	delete_btn.pressed.connect(_on_delete_pressed)
+	
+	# Enforce mouse filter to ensure button consumes events
+	delete_btn.mouse_filter = MouseFilter.MOUSE_FILTER_STOP
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# Safety check: if the click happened over the delete button, ignore it here
+		# (This handles edge cases where the event might propagate or if user clicks passing through)
+		if delete_btn.is_visible_in_tree() and delete_btn.get_global_rect().has_point(get_global_mouse_position()):
+			return
+			
 		load_requested.emit(world_id)
-
-func _on_mouse_entered() -> void:
-	delete_btn.show()
-
-func _on_mouse_exited() -> void:
-	# Keep shown if hovering the button itself? 
-	# Actually, the button is inside the panel, so mouse_exited won't fire if we move to the button (child).
-	# Wait, mouse_exited fires when leaving the control's rect. Moving to a child *inside* doesn't trigger exit.
-	# So this is fine.
-	delete_btn.hide()
 
 func _on_delete_pressed() -> void:
 	delete_requested.emit(world_id, world_name)

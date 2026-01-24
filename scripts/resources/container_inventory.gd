@@ -20,21 +20,23 @@ func _init_slots() -> void:
 	for i in range(slot_count):
 		_slots.append(null)
 
-# --- Public API ---
+# ------------------------------------------------------------------------------
+# Public API
+# ------------------------------------------------------------------------------
 
 func add_item(item: InventoryItem, count: int = 1) -> int:
 	if item == null or count <= 0:
 		return -1
 	
-	var remaining = count
+	var remaining: int = count
 	
 	# 1. Stack with existing
 	if item.max_stack > 1:
 		for i in range(slot_count):
 			if _slots[i] != null and _slots[i].item.id == item.id:
-				var space = item.max_stack - _slots[i].count
+				var space: int = item.max_stack - _slots[i].count
 				if space > 0:
-					var to_add = min(remaining, space)
+					var to_add: int = min(remaining, space)
 					_slots[i].count += to_add
 					remaining -= to_add
 					slot_changed.emit(i, _slots[i].item, _slots[i].count)
@@ -45,14 +47,14 @@ func add_item(item: InventoryItem, count: int = 1) -> int:
 	
 	# 2. Find empty slots
 	while remaining > 0:
-		var empty_slot = get_first_empty_slot()
+		var empty_slot: int = get_first_empty_slot()
 		if empty_slot == -1:
 			if remaining < count:
 				item_added.emit(item, -1, count - remaining)
 			return -1
 		
-		var to_add = min(remaining, item.max_stack)
-		_slots[empty_slot] = {item = item, count = to_add}
+		var to_add: int = min(remaining, item.max_stack)
+		_slots[empty_slot] = { "item": item, "count": to_add }
 		remaining -= to_add
 		slot_changed.emit(empty_slot, item, to_add)
 		
@@ -66,16 +68,16 @@ func add_item_quantity(item: InventoryItem, count: int) -> int:
 	if item == null or count <= 0:
 		return 0
 	
-	var remaining = count
-	var total_added = 0
+	var remaining: int = count
+	var total_added: int = 0
 	
 	# 1. Stack with existing
 	if item.max_stack > 1:
 		for i in range(slot_count):
 			if _slots[i] != null and _slots[i].item.id == item.id:
-				var space = item.max_stack - _slots[i].count
+				var space: int = item.max_stack - _slots[i].count
 				if space > 0:
-					var to_add = min(remaining, space)
+					var to_add: int = min(remaining, space)
 					_slots[i].count += to_add
 					remaining -= to_add
 					total_added += to_add
@@ -87,12 +89,12 @@ func add_item_quantity(item: InventoryItem, count: int) -> int:
 	
 	# 2. Empty slots
 	while remaining > 0:
-		var empty_slot = get_first_empty_slot()
+		var empty_slot: int = get_first_empty_slot()
 		if empty_slot == -1:
 			break
 		
-		var to_add = min(remaining, item.max_stack)
-		_slots[empty_slot] = {item = item, count = to_add}
+		var to_add: int = min(remaining, item.max_stack)
+		_slots[empty_slot] = { "item": item, "count": to_add }
 		remaining -= to_add
 		total_added += to_add
 		slot_changed.emit(empty_slot, item, to_add)
@@ -106,9 +108,9 @@ func remove_item(slot: int, count: int = 1) -> Dictionary:
 	if slot < 0 or slot >= slot_count or _slots[slot] == null:
 		return {}
 	
-	var slot_data = _slots[slot]
-	var to_remove = min(count, slot_data.count)
-	var removed_item = slot_data.item
+	var slot_data: Dictionary = _slots[slot]
+	var to_remove: int = min(count, slot_data.count)
+	var removed_item: InventoryItem = slot_data.item
 	
 	slot_data.count -= to_remove
 	
@@ -119,7 +121,7 @@ func remove_item(slot: int, count: int = 1) -> Dictionary:
 		slot_changed.emit(slot, slot_data.item, slot_data.count)
 	
 	item_removed.emit(removed_item, slot, to_remove)
-	return {item = removed_item, count = to_remove}
+	return { "item": removed_item, "count": to_remove }
 
 func get_slot(slot: int) -> Variant:
 	if slot < 0 or slot >= slot_count:
@@ -134,7 +136,7 @@ func set_slot(slot: int, item: InventoryItem, count: int) -> void:
 		_slots[slot] = null
 		slot_changed.emit(slot, null, 0)
 	else:
-		_slots[slot] = {item = item, count = count}
+		_slots[slot] = { "item": item, "count": count }
 		slot_changed.emit(slot, item, count)
 
 func get_first_empty_slot() -> int:
@@ -153,44 +155,45 @@ func is_empty() -> bool:
 	return true
 
 func count_item(item_id: String) -> int:
-	var total = 0
+	var total: int = 0
 	for slot_data in _slots:
 		if slot_data != null and slot_data.item.id == item_id:
 			total += slot_data.count
 	return total
 
 # Category order for sorting (mirrors Inventory autoload)
-const CATEGORY_ORDER = ["seed", "crop", "material", "tool", "decoration"]
+const CATEGORY_ORDER: Array[String] = ["seed", "crop", "material", "tool", "decoration"]
 
 func sort_inventory() -> void:
 	# 1. Consolidate stacks
-	var consolidated: Array = []
+	var consolidated: Array[Dictionary] = []
 	for slot in _slots:
 		if slot == null: continue
 		
 		# Try to merge with existing items in consolidated list
+		var merged: bool = false
 		for existing in consolidated:
 			if existing.item.id == slot.item.id:
-				var space = existing.item.max_stack - existing.count
+				var space: int = existing.item.max_stack - existing.count
 				if space > 0:
-					var transfer = min(slot.count, space)
+					var transfer: int = min(slot.count, space)
 					existing.count += transfer
 					slot.count -= transfer
 					if slot.count <= 0:
+						merged = true
 						break
 		
-		# If items remain, add as new stack
-		if slot.count > 0:
-			consolidated.append({item = slot.item, count = slot.count})
+		if !merged and slot.count > 0:
+			consolidated.append({ "item": slot.item, "count": slot.count })
 			
 	# 2. Sort the consolidated list
-	consolidated.sort_custom(func(a, b):
-		var cat_a = CATEGORY_ORDER.find(a.item.category)
-		var cat_b = CATEGORY_ORDER.find(b.item.category)
+	consolidated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var cat_a: int = CATEGORY_ORDER.find(a.item.category)
+		var cat_b: int = CATEGORY_ORDER.find(b.item.category)
 		
 		# 1. Category (lower index = higher priority)
 		if cat_a != cat_b:
-			if cat_a == -1: return false # Unknown category goes last
+			if cat_a == -1: return false 
 			if cat_b == -1: return true
 			return cat_a < cat_b
 			
@@ -198,7 +201,7 @@ func sort_inventory() -> void:
 		if a.item.id != b.item.id:
 			return a.item.id < b.item.id
 			
-		# 3. Count (Descending - larger stacks first)
+		# 3. Count (Descending)
 		return a.count > b.count
 	)
 	
@@ -211,10 +214,12 @@ func sort_inventory() -> void:
 			_slots[i] = null
 			slot_changed.emit(i, null, 0)
 
-# --- Save/Load ---
+# ------------------------------------------------------------------------------
+# Save/Load
+# ------------------------------------------------------------------------------
 
 func to_save_data() -> Array:
-	var slots_data = []
+	var slots_data: Array = []
 	for slot in _slots:
 		if slot == null:
 			slots_data.append(null)
@@ -231,11 +236,11 @@ func from_save_data(data: Array) -> void:
 		if slot_data == null:
 			_slots.append(null)
 		else:
-			var item = ItemRegistry.get_item(slot_data["item_id"])
+			var item: InventoryItem = ItemRegistry.get_item(slot_data["item_id"])
 			if item:
 				_slots.append({
 					"item": item,
-					"count": slot_data["count"]
+					"count": int(slot_data["count"])
 				})
 			else:
 				_slots.append(null)

@@ -1,17 +1,18 @@
-[gd_scene load_steps=14 format=3 uid="uid://bookmc5mimnt1"]
+[gd_scene load_steps=15 format=3 uid="uid://bckom15vxf60c"]
 
 [ext_resource type="Script" uid="uid://bx7kpdiycpblp" path="res://scripts/rat_assistant.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dcsh6hiuwh6k2" path="res://assets/objects/buildings/Rat.png" id="2_px8sg"]
-[ext_resource type="Script" uid="uid://bt0hopo7mmy55" path="res://scripts/rat/RatVisuals.gd" id="3_visuals"]
-[ext_resource type="Script" uid="uid://bk53cf33jp7on" path="res://scripts/rat/RatInventory.gd" id="4_inventory"]
+[ext_resource type="Script" uid="uid://b0vfc1543ymmv" path="res://scripts/rat/rat_visuals.gd" id="3_visuals"]
+[ext_resource type="Script" uid="uid://cd7h111dh7p6u" path="res://scripts/rat/rat_inventory.gd" id="4_inventory"]
 [ext_resource type="FontFile" uid="uid://dqtcmyslgqxwj" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="5_font"]
 [ext_resource type="Script" uid="uid://btv7456g47lm" path="res://scripts/components/StateMachine.gd" id="6_fsm"]
-[ext_resource type="Script" uid="uid://dyxg5tt34r6j6" path="res://scripts/rat/states/RatIdleState.gd" id="7_idle"]
-[ext_resource type="Script" uid="uid://cjmvea7gss341" path="res://scripts/rat/states/RatMoveToSourceState.gd" id="8_move"]
-[ext_resource type="Script" uid="uid://brhir5mnc6ll8" path="res://scripts/rat/states/RatHarvestState.gd" id="9_harvest"]
-[ext_resource type="Script" uid="uid://gimax85quln2" path="res://scripts/rat/states/RatMoveToOutputState.gd" id="10_move_out"]
-[ext_resource type="Script" uid="uid://puqdv8qyxvq0" path="res://scripts/rat/states/RatDepositState.gd" id="11_deposit"]
-[ext_resource type="Script" uid="uid://bhb26k33pvqfl" path="res://scripts/rat/states/RatReturnHomeState.gd" id="12_return"]
+[ext_resource type="Script" uid="uid://dqsrn7y6jyswc" path="res://scripts/rat/states/rat_idle_state.gd" id="7_idle"]
+[ext_resource type="Script" uid="uid://bpiec7hkymbwp" path="res://scripts/rat/states/rat_move_to_source_state.gd" id="8_move"]
+[ext_resource type="Script" uid="uid://4f2mldwq2cvk" path="res://scripts/rat/states/rat_harvest_state.gd" id="9_harvest"]
+[ext_resource type="Script" uid="uid://1504s373281" path="res://scripts/rat/states/rat_move_to_output_state.gd" id="10_move_out"]
+[ext_resource type="Script" uid="uid://vovvdwbj2uq8" path="res://scripts/rat/states/rat_deposit_state.gd" id="11_deposit"]
+[ext_resource type="Script" uid="uid://by7682l3dinun" path="res://scripts/rat/states/rat_return_home_state.gd" id="12_return"]
+[ext_resource type="Script" uid="uid://draijilhin7un" path="res://scripts/rat/states/rat_plant_state.gd" id="13_plant"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rat"]
 radius = 6.0
@@ -77,3 +78,6 @@ script = ExtResource("11_deposit")
 
 [node name="ReturnHome" type="Node" parent="StateMachine"]
 script = ExtResource("12_return")
+
+[node name="Plant" type="Node" parent="StateMachine"]
+script = ExtResource("13_plant")

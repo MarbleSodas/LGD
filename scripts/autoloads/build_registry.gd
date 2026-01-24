@@ -1,5 +1,10 @@
 extends Node
 
+## Global registry for buildable items (buildings, plants, etc.).
+##
+## Manages unlocking items and the hotbar system.
+## Loads items from resources/buildables directory.
+
 ## Emitted when a new item is unlocked
 signal buildable_unlocked(item: BuildableItem)
 
@@ -10,6 +15,9 @@ signal hotbar_changed(slot: int, item: BuildableItem)
 ## Emitted when the active buildable item changes
 ## item is null if deactivated (empty hand/non-build tool)
 signal active_buildable_changed(item: BuildableItem)
+
+const BUILDABLES_PATH: String = "res://resources/buildables/"
+const HOTBAR_SIZE: int = 10
 
 ## Dictionary of all loaded items: {id: BuildableItem}
 var _all_items: Dictionary = {}
@@ -32,26 +40,25 @@ func _ready() -> void:
 
 ## Initialize empty hotbar
 func _init_hotbar() -> void:
-	for i in range(10):
+	for i in range(HOTBAR_SIZE):
 		_hotbar[i] = null
 
 ## Load all buildable resources from the resources/buildables folder
 func _load_buildables() -> void:
-	var path = "res://resources/buildables/"
-	var dir = DirAccess.open(path)
+	var dir: DirAccess = DirAccess.open(BUILDABLES_PATH)
 	if dir:
 		dir.list_dir_begin()
-		var file_name = dir.get_next()
+		var file_name: String = dir.get_next()
 		while file_name != "":
 			if !dir.current_is_dir() and (file_name.ends_with(".tres") or file_name.ends_with(".remap")):
 				# Strip .remap extension for exported projects
-				var load_path = path + file_name.replace(".remap", "")
-				var item = load(load_path) as BuildableItem
+				var load_path: String = BUILDABLES_PATH + file_name.replace(".remap", "")
+				var item: BuildableItem = load(load_path) as BuildableItem
 				if item and item.id != "":
 					_all_items[item.id] = item
 			file_name = dir.get_next()
 	else:
-		push_error("BuildRegistry: Could not open " + path)
+		push_error("BuildRegistry: Could not open " + BUILDABLES_PATH)
 
 ## Unlock initial items
 func _unlock_default_items() -> void:
@@ -80,7 +87,9 @@ func _unlock_default_items() -> void:
 		unlock_item("processor")
 		assign_to_hotbar(5, _all_items["processor"])
 
-# --- Public API ---
+# ------------------------------------------------------------------------------
+# Public API
+# ------------------------------------------------------------------------------
 
 ## Get an item by ID
 func get_item(id: String) -> BuildableItem:
@@ -110,12 +119,12 @@ func unlock_item(id: String) -> void:
 
 ## Assign an item to a hotbar slot
 func assign_to_hotbar(slot: int, item: BuildableItem) -> void:
-	if slot < 0 or slot >= 10:
+	if slot < 0 or slot >= HOTBAR_SIZE:
 		return
 		
 	# If this item is already bound to another slot, clear that slot first
-	# (Optional: depends on if we want to allow duplicates. Let's assume unique binding for now)
-	var existing_slot = get_slot_for_item(item)
+	# (Unique binding rule)
+	var existing_slot: int = get_slot_for_item(item)
 	if existing_slot != -1 and existing_slot != slot:
 		unassign_from_hotbar(existing_slot)
 	
@@ -124,7 +133,7 @@ func assign_to_hotbar(slot: int, item: BuildableItem) -> void:
 
 ## Unassign whatever is in the slot
 func unassign_from_hotbar(slot: int) -> void:
-	if slot < 0 or slot >= 10:
+	if slot < 0 or slot >= HOTBAR_SIZE:
 		return
 	
 	if _hotbar[slot] != null:
@@ -150,7 +159,39 @@ func set_active(item: BuildableItem) -> void:
 func clear_active() -> void:
 	active_buildable = null
 
-# --- Internal ---
+## Find a buildable ID that can be built using the specified item as a primary cost.
+## Useful for rats to determine what to plant based on seeds they are holding.
+func get_buildable_id_from_cost(item_id: String) -> String:
+	for id in _unlocked_ids:
+		if _all_items.has(id):
+			var item: BuildableItem = _all_items[id]
+			# Heuristic: If it costs this item, it's likely what we want to plant.
+			# We prioritize single-ingredient costs to avoid complex recipes.
+			if item.build_costs.size() == 1 and item.build_costs.has(item_id):
+				return id
+	return ""
+
+## Check if the buildable item is actually a Plant (vs a Building).
+## Instantiates the scene temporarily to check its type.
+func is_buildable_a_plant(id: String) -> bool:
+	if not _all_items.has(id): return false
+	
+	var item: BuildableItem = _all_items[id]
+	if not item.scene: return false
+	
+	var instance = item.scene.instantiate()
+	var is_plant: bool = false
+	
+	# Check if it inherits from Plant class (by class_name or script)
+	if instance.has_method("is_harvest_ready"): # Duck typing for Plant
+		is_plant = true
+	
+	instance.free()
+	return is_plant
+
+# ------------------------------------------------------------------------------
+# Internal
+# ------------------------------------------------------------------------------
 
 func _set_active_buildable(val: BuildableItem) -> void:
 	if active_buildable != val:

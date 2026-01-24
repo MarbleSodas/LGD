@@ -7,6 +7,8 @@ extends Node2D
 ## - AnimationPlayer (with "Processing_Animation" and "idle")
 ## - Layers/BaseLayer, Layers/MiddleLayer, Layers/TopLayer etc.
 
+signal selected_recipe_changed(recipe: ProcessorRecipe)
+
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var layers: Node2D = $Layers
 
@@ -20,6 +22,11 @@ var output_inventory: ContainerInventory
 
 # --- Recipes ---
 @export var recipes: Array[ProcessorRecipe] = []
+
+# --- Recipe Selection ---
+## The recipe the player has selected for this processor. Processing only occurs
+## when input matches this recipe. Null means no recipe selected.
+var selected_recipe: ProcessorRecipe = null
 
 # --- Processing ---
 var current_recipe: ProcessorRecipe = null
@@ -88,6 +95,23 @@ func get_processing_progress() -> float:
 		return 0.0
 	return 1.0 - (process_timer.time_left / process_duration)
 
+## Set the selected recipe for this processor. Only this recipe will be processed.
+func set_selected_recipe(recipe: ProcessorRecipe) -> void:
+	if selected_recipe == recipe:
+		return
+	selected_recipe = recipe
+	selected_recipe_changed.emit(recipe)
+	# Re-check if we can start processing with the new selection
+	if current_state == State.IDLE:
+		_check_recipe()
+
+## Get the item ID that this processor wants (based on selected recipe).
+## Returns empty string if no recipe is selected.
+func get_wanted_item_id() -> String:
+	if selected_recipe == null or selected_recipe.input_item == null:
+		return ""
+	return selected_recipe.input_item.id
+
 # --- Recipe Logic ---
 
 func _load_recipes() -> void:
@@ -100,6 +124,10 @@ func _load_recipes() -> void:
 func _check_recipe() -> void:
 	if current_state != State.IDLE:
 		return
+	
+	# Must have a selected recipe to process
+	if selected_recipe == null:
+		return
 		
 	# 1. Check Input
 	var input_slot = input_inventory.get_slot(0)
@@ -109,10 +137,9 @@ func _check_recipe() -> void:
 	var item = input_slot.item
 	var count = input_slot.count
 	
-	# 2. Find matching recipe
-	var recipe = _find_recipe_for(item, count)
-	if recipe:
-		_start_processing(recipe)
+	# 2. Check if input matches selected recipe
+	if item == selected_recipe.input_item and count >= selected_recipe.input_count:
+		_start_processing(selected_recipe)
 
 func _find_recipe_for(item: InventoryItem, count: int) -> ProcessorRecipe:
 	for r in recipes:
@@ -234,7 +261,8 @@ func get_save_data() -> Dictionary:
 		"output_inventory": output_inventory.to_save_data(),
 		"current_state": current_state,
 		"process_time_left": process_timer.time_left if process_timer else 0.0,
-		"current_recipe_id": _get_recipe_id(current_recipe)
+		"current_recipe_id": _get_recipe_id(current_recipe),
+		"selected_recipe_id": _get_recipe_id(selected_recipe)
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -245,6 +273,12 @@ func load_save_data(data: Dictionary) -> void:
 	
 	current_state = data.get("current_state", State.IDLE)
 	
+	# Restore selected recipe (user's choice)
+	var selected_id = data.get("selected_recipe_id", "")
+	if selected_id != "":
+		selected_recipe = _get_recipe_by_id(selected_id)
+	
+	# Restore current recipe (in-progress processing)
 	var recipe_id = data.get("current_recipe_id", "")
 	if recipe_id != "":
 		current_recipe = _get_recipe_by_id(recipe_id)
@@ -272,3 +306,69 @@ func _get_recipe_by_id(id: String) -> ProcessorRecipe:
 	if ResourceLoader.exists(id):
 		return load(id) as ProcessorRecipe
 	return null
+
+# --- Dual-Role Interface (Rat Integration) ---
+
+func get_input_inventory() -> ContainerInventory:
+	return input_inventory
+
+func get_output_inventory() -> ContainerInventory:
+	return output_inventory
+
+## Smart inventory access for automated agents
+func get_preferred_inventory(action_type: String) -> ContainerInventory:
+	if action_type == "insert":
+		return input_inventory
+	elif action_type == "extract":
+		return output_inventory
+	return output_inventory 
+
+## Compatibility for Rat "Deposit" Logic (Target: Input)
+func get_container() -> ContainerInventory:
+	return input_inventory
+
+## Compatibility for Rat "Harvest" Logic (Target: Output)
+func is_harvest_ready() -> bool:
+	if not output_inventory: return false
+	return not output_inventory.is_empty()
+
+func harvest(max_amount: int = 10) -> Dictionary:
+	if not output_inventory or output_inventory.is_empty():
+		return {}
+	
+	var harvested_items: Array = []
+	var remaining = max_amount
+	
+	for i in range(output_inventory.slot_count):
+		if remaining <= 0: break
+			
+		var slot = output_inventory.get_slot(i)
+		if slot == null: continue
+		
+		var available = slot.count
+		var take_amount = mini(available, remaining)
+		var item_id = slot.item.id # Assuming item has id property
+		
+		# We assume the item object itself is needed for return, 
+		# but the harvest signature returns a Dict with IDs.
+		# RatHarvestState._complete_harvest reconstructs the item from ID via ItemDatabase usually?
+		# Let's check RatHarvestState logic.
+		# Assuming standard harvest protocol.
+		
+		output_inventory.remove_item(i, take_amount)
+		
+		harvested_items.append({"item_id": item_id, "amount": take_amount})
+		remaining -= take_amount
+	
+	if harvested_items.is_empty():
+		return {}
+	
+	var result = {
+		"item_id": harvested_items[0]["item_id"],
+		"amount": harvested_items[0]["amount"]
+	}
+	
+	if harvested_items.size() > 1:
+		result["extra_items"] = harvested_items.slice(1)
+		
+	return result

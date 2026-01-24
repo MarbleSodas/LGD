@@ -2,6 +2,7 @@ class_name PlantingSystem
 extends Node2D
 
 ## Main controller for the planting and building system.
+##
 ## Delegates specific logic to child managers (Placement, Deletion, Interaction).
 ## Maintains the state of the world (occupied tiles).
 
@@ -37,10 +38,14 @@ func _ready() -> void:
 
 func _resolve_dependencies() -> void:
 	# Fallback search if not assigned in Editor
-	if not tile_map: tile_map = get_parent().get_node_or_null("TileMapLayer")
-	if not ysort_root: ysort_root = get_parent().get_node_or_null("YSortRoot")
-	if not player: player = ysort_root.get_node_or_null("Hana") if ysort_root else null
-	if not ui_root: ui_root = get_parent().get_node_or_null("UI")
+	if not tile_map: 
+		tile_map = get_parent().get_node_or_null("TileMapLayer")
+	if not ysort_root: 
+		ysort_root = get_parent().get_node_or_null("YSortRoot")
+	if not player and ysort_root: 
+		player = ysort_root.get_node_or_null("Hana")
+	if not ui_root: 
+		ui_root = get_parent().get_node_or_null("UI")
 	
 	if not tile_map or not player:
 		push_error("PlantingSystem: Missing essential dependencies.")
@@ -56,13 +61,13 @@ func _setup_managers() -> void:
 	add_child(interaction_manager)
 	
 	# inject dependencies
-	var bulk_panel = ui_root.get_node_or_null("BulkCostPanel") if ui_root else null
+	var bulk_panel: Control = ui_root.get_node_or_null("BulkCostPanel") if ui_root else null
 	placement_manager.setup(self, tile_map, ysort_root, player, bulk_panel)
 	
-	var delete_overlay = ui_root.get_node_or_null("DeleteModeOverlay") if ui_root else null
+	var delete_overlay: Control = ui_root.get_node_or_null("DeleteModeOverlay") if ui_root else null
 	deletion_manager.setup(self, tile_map, delete_overlay)
 	
-	var interact_area = player.get_node_or_null("InteractArea") if player else null
+	var interact_area: Area2D = player.get_node_or_null("InteractArea") if player else null
 	if not interact_area and player and player.has_method("get_interact_area"):
 		interact_area = player.get_interact_area()
 		
@@ -80,7 +85,7 @@ func _scan_existing_objects() -> void:
 	
 	for child in ysort_root.get_children():
 		if child.has_meta("buildable_id") or child is Plant or child is StorageBuilding:
-			var coords = tile_map.local_to_map(child.global_position)
+			var coords: Vector2i = tile_map.local_to_map(child.global_position)
 			occupied_tiles[coords] = child
 
 # --- Mode Management ---
@@ -136,21 +141,25 @@ func _input(event: InputEvent) -> void:
 
 # --- Public API for Managers ---
 
+## Check if a tile is occupied by an object
 func is_tile_occupied(coords: Vector2i) -> bool:
 	return occupied_tiles.has(coords) and is_instance_valid(occupied_tiles[coords])
 
+## Get the object at a specific tile coordinate
 func get_object_at(coords: Vector2i) -> Node2D:
 	if is_tile_occupied(coords):
 		return occupied_tiles[coords]
 	return null
 
+## Register an object at a coordinate (Internal use)
 func register_object(coords: Vector2i, object: Node2D) -> void:
 	occupied_tiles[coords] = object
 
+## Remove an object from a coordinate
 func remove_object(coords: Vector2i) -> bool:
 	if not is_tile_occupied(coords): return false
 	
-	var obj = occupied_tiles[coords]
+	var obj: Node2D = occupied_tiles[coords]
 	occupied_tiles.erase(coords)
 	
 	if is_instance_valid(obj):
@@ -158,19 +167,43 @@ func remove_object(coords: Vector2i) -> bool:
 		
 	return true
 
+## Plant an item at a specific coordinate programmatically
+func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
+	if is_tile_occupied(coords):
+		return false
+		
+	var item: BuildableItem = BuildRegistry.get_item(buildable_id)
+	if not item or not item.scene:
+		return false
+		
+	var instance: Node2D = item.scene.instantiate() as Node2D
+	var pos: Vector2 = tile_map.map_to_local(coords)
+	
+	var final_offset: Vector2 = item.placement_offset
+	if not item.ignore_system_offset and placement_manager:
+		final_offset += placement_manager.plant_offset
+		
+	instance.global_position = pos + final_offset
+	instance.set_meta("buildable_id", buildable_id)
+	
+	ysort_root.add_child(instance)
+	register_object(coords, instance)
+	
+	return true
+
 # --- Save / Load ---
 
 func to_save_data() -> Dictionary:
-	var plants_data = []
+	var plants_data: Array = []
 	
 	for tile_coords in occupied_tiles:
-		var plant = occupied_tiles[tile_coords]
+		var plant: Node2D = occupied_tiles[tile_coords]
 		if not is_instance_valid(plant): continue
 		
 		# Only save objects with a buildable_id
 		if not plant.has_meta("buildable_id"): continue
 		
-		var data = {
+		var data: Dictionary = {
 			"x": tile_coords.x,
 			"y": tile_coords.y,
 			"buildable_id": plant.get_meta("buildable_id")
@@ -178,11 +211,8 @@ func to_save_data() -> Dictionary:
 		
 		# Delegate detailed saving to object itself
 		if plant.has_method("get_save_data"):
-			var extra = plant.get_save_data()
+			var extra: Dictionary = plant.get_save_data()
 			data.merge(extra)
-		# Legacy support for Plant properties
-		elif plant.get("current_stage") != null:
-			data["stage"] = plant.current_stage
 			
 		plants_data.append(data)
 		
@@ -191,24 +221,23 @@ func to_save_data() -> Dictionary:
 func from_save_data(data: Dictionary) -> void:
 	if not data.has("plants"): return
 	
-	# Clear existing first? Or just append? 
 	# Usually loading happens on scene start, so let's assume empty or overwrite.
 	
 	for entry in data["plants"]:
-		var coords = Vector2i(entry["x"], entry["y"])
-		var id = entry.get("buildable_id", "")
+		var coords: Vector2i = Vector2i(entry["x"], entry["y"])
+		var id: String = entry.get("buildable_id", "")
 		
-		var item = BuildRegistry.get_item(id)
+		var item: BuildableItem = BuildRegistry.get_item(id)
 		if not item or not item.scene: continue
 		
 		# Visuals
 		tile_map.set_cell(coords, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
 		
 		# Spawn
-		var instance = item.scene.instantiate() as Node2D
-		var pos = tile_map.map_to_local(coords)
+		var instance: Node2D = item.scene.instantiate() as Node2D
+		var pos: Vector2 = tile_map.map_to_local(coords)
 		
-		var offset = item.placement_offset
+		var offset: Vector2 = item.placement_offset
 		if not item.ignore_system_offset:
 			offset += placement_manager.plant_offset
 			
@@ -221,6 +250,3 @@ func from_save_data(data: Dictionary) -> void:
 		# Restore State
 		if instance.has_method("load_save_data"):
 			instance.load_save_data(entry)
-		# Legacy Plant Support
-		elif instance.has_method("set_growth_stage") and entry.has("stage"):
-			instance.set_growth_stage(int(entry["stage"]))

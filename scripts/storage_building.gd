@@ -6,6 +6,9 @@ extends Sprite2D
 
 @export var storage_slots: int = 30
 
+const GROUP_UI_LAYER: String = "ui_layer"
+const GROUP_PLANTING_SYSTEM: String = "planting_system"
+
 var container: ContainerInventory
 var is_interacting: bool = false
 var _current_panel: Control = null
@@ -16,28 +19,23 @@ func _ready() -> void:
 
 ## Called by PlantingSystem when player interacts
 func interact() -> void:
-	print("StorageBuilding: interact() called")
 	is_interacting = true
 	
 	# Find the ContainerPanel in the UI and open it
-	# We assume the UI structure is known or we can find it via group/singleton
-	# For now, let's look for it in the scene tree
-	
-	var ui_layer = get_tree().get_first_node_in_group("ui_layer")
+	var ui_layer: Node = get_tree().get_first_node_in_group(GROUP_UI_LAYER)
 	if ui_layer:
-		var container_panel = ui_layer.get_node_or_null("ContainerPanel")
+		var container_panel: Control = ui_layer.get_node_or_null("ContainerPanel")
 		if container_panel:
-			print("StorageBuilding: Found ContainerPanel via group")
 			_current_panel = container_panel
 			container_panel.open(container, "Storage Barrel", self) # TODO: Make title configurable
 			return
 			
 	# Fallback search if group not set
-	var ui = get_tree().current_scene.get_node_or_null("UI")
+	var current_scene: Node = get_tree().current_scene
+	var ui: Node = current_scene.get_node_or_null("UI")
 	if ui:
-		var panel = ui.get_node_or_null("ContainerPanel")
+		var panel: Control = ui.get_node_or_null("ContainerPanel")
 		if panel:
-			print("StorageBuilding: Found ContainerPanel via current_scene")
 			_current_panel = panel
 			panel.open(container, "Storage Barrel", self)
 		else:
@@ -55,11 +53,12 @@ func on_ui_closed() -> void:
 	_notify_interaction_manager_closed()
 
 func _notify_interaction_manager_closed() -> void:
-	var planting_system = get_tree().get_first_node_in_group("planting_system")
+	var planting_system: Node = get_tree().get_first_node_in_group(GROUP_PLANTING_SYSTEM)
 	if not planting_system:
-		var root = get_tree().current_scene
+		var root: Node = get_tree().current_scene
 		if root.has_node("PlantingSystem"):
 			planting_system = root.get_node("PlantingSystem")
+			
 	if planting_system and planting_system.interaction_manager:
 		planting_system.interaction_manager.on_building_closed(self)
 
@@ -77,31 +76,23 @@ func harvest(max_amount: int = 10) -> Dictionary:
 	if not container or container.is_empty():
 		return {}
 	
-	var harvested_items: Array = []
-	var remaining = max_amount
-	
-	# Take items from container until we hit capacity
-	# Iterate backwards or iterate a copy to avoid index issues? 
-	# The container logic shifts things or just clears slots? 
-	# Looking at ContainerInventory.remove_item, it just clears or reduces count.
-	# We iterate slot indices.
+	var harvested_items: Array[Dictionary] = []
+	var remaining: int = max_amount
 	
 	for i in range(container.slot_count):
 		if remaining <= 0:
 			break
 			
-		var slot = container.get_slot(i)
-		if slot == null: # ContainerInventory uses null for empty slots
+		var slot: Variant = container.get_slot(i)
+		if slot == null:
 			continue
 		
-		var available = slot.count
-		var take_amount = mini(available, remaining)
-		var item_id = slot.item.id
+		var available: int = slot.count
+		var take_amount: int = mini(available, remaining)
+		var item_id: String = slot.item.id
 		
-		container.remove_item(i, take_amount) # Using public API
+		container.remove_item(i, take_amount)
 		
-		# Consolidate with existing harvested items or just append?
-		# Simple append is fine, RatAssistant will handle.
 		harvested_items.append({"item_id": item_id, "amount": take_amount})
 		remaining -= take_amount
 	
@@ -109,7 +100,7 @@ func harvest(max_amount: int = 10) -> Dictionary:
 		return {}
 	
 	# Format result
-	var result = {
+	var result: Dictionary = {
 		"item_id": harvested_items[0]["item_id"],
 		"amount": harvested_items[0]["amount"]
 	}
@@ -119,7 +110,9 @@ func harvest(max_amount: int = 10) -> Dictionary:
 		
 	return result
 
-# --- Save/Load Support ---
+# ------------------------------------------------------------------------------
+# Save/Load Support
+# ------------------------------------------------------------------------------
 
 # These are called by PlantingSystem during save/load
 

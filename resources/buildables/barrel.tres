@@ -14,4 +14,6 @@ preview_texture = ExtResource("2_icon")
 preview_frame = 0
 preview_hframes = 1
 placement_offset = Vector2(0, 16)
-build_costs = {}
+build_costs = {
+"wood": 20
+}

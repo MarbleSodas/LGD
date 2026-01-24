@@ -105,8 +105,8 @@ func _populate_slots() -> void:
 
 func _add_slot(index: int) -> void:
 	var slot = InventorySlotScene.instantiate()
+	slot.slot_index = index  # Set BEFORE add_child so _ready() has correct index
 	grid.add_child(slot)
-	slot.slot_index = index
 	# slot_clicked signal is no longer needed as slots handle their own input
 
 func _on_slots_expanded(new_max: int) -> void:

@@ -1,5 +1,5 @@
 class_name ProcessorBuilding
-extends Node2D
+extends DirectionalBuilding
 
 ## Processor Building with Input/Output inventory and Recipe logic.
 ##
@@ -34,6 +34,7 @@ var process_duration: float = 0.0
 var process_timer: Timer
 
 func _ready() -> void:
+	super._ready()
 	# Initialize inventories (Size 1 each)
 	input_inventory = ContainerInventory.new(1)
 	output_inventory = ContainerInventory.new(1)
@@ -262,7 +263,11 @@ func get_save_data() -> Dictionary:
 		"current_state": current_state,
 		"process_time_left": process_timer.time_left if process_timer else 0.0,
 		"current_recipe_id": _get_recipe_id(current_recipe),
-		"selected_recipe_id": _get_recipe_id(selected_recipe)
+		"selected_recipe_id": _get_recipe_id(selected_recipe),
+		"is_flipped": is_flipped,
+		"center_tile_x": center_tile.x,
+		"center_tile_y": center_tile.y,
+		"version": 2
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -270,6 +275,14 @@ func load_save_data(data: Dictionary) -> void:
 		input_inventory.from_save_data(data["input_inventory"])
 	if data.has("output_inventory"):
 		output_inventory.from_save_data(data["output_inventory"])
+	
+	if data.has("is_flipped"):
+		is_flipped = data["is_flipped"]
+		
+	if data.has("center_tile_x") and data.has("center_tile_y"):
+		center_tile = Vector2i(data["center_tile_x"], data["center_tile_y"])
+		
+	_update_orientation()
 	
 	current_state = data.get("current_state", State.IDLE)
 	
@@ -308,6 +321,14 @@ func _get_recipe_by_id(id: String) -> ProcessorRecipe:
 	return null
 
 # --- Dual-Role Interface (Rat Integration) ---
+
+## Returns the tile coordinates where rats should deposit items
+func get_deposit_tile() -> Vector2i:
+	return get_input_tile()
+
+## Returns the tile coordinates where rats should harvest items
+func get_harvest_tile() -> Vector2i:
+	return get_output_tile()
 
 func get_input_inventory() -> ContainerInventory:
 	return input_inventory

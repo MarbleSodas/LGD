@@ -3,8 +3,11 @@ extends Node2D
 
 ## Hub for the Rat Assistant.
 ##
-## Manages task assignment (harvest, plant, store) and configuration.
-## Handles interaction to open the Rat Manager UI.
+## Manages task assignment with strict priorities:
+## 1. Deposit (if inventory full).
+## 2. Harvest (standard work).
+## 3. Flush Inventory (if items held).
+
 
 const MAX_SOURCES: int = 10
 const MAX_OUTPUTS: int = 10
@@ -25,7 +28,8 @@ var tile_map: TileMapLayer
 var assigned_sources: Array[Vector2i] = []
 var assigned_outputs: Array[Vector2i] = []
 var _output_rr_index: int = 0
-var _planting_rr_index: int = 0
+# Removed _planting_rr_index
+
 var show_debug_visuals: bool = false
 var is_interacting: bool = false
 var hover_coords: Vector2i = Vector2i.MAX
@@ -183,188 +187,95 @@ func _draw_overlay() -> void:
 		_visuals_overlay.draw_rect(Rect2(pos - half_ts, ts), Color(1.0, 0.8, 0.2, 0.8), false, 2.0)
 
 # ------------------------------------------------------------------------------
-# Task Management
+# Task Management (REWRITTEN)
 # ------------------------------------------------------------------------------
 
 func _assign_next_task() -> void:
-	if assigned_outputs.is_empty() or not is_instance_valid(rat_instance): return 
-	if not rat_instance.is_available(): return
+	if not is_instance_valid(rat_instance) or not rat_instance.is_available(): 
+		return
 	
-	# Priority 1: Planting (If we have seeds)
-	if _try_assign_planting():
-		return
-
-	# Priority 2: Delivering Existing Items
-	if _try_assign_delivery():
-		return
-		
-	# Priority 3: Standard Harvest
-	_try_assign_harvest()
-
-func _try_assign_planting() -> bool:
-	# Check if we have ANY plantable items in inventory
-	if not rat_instance.inventory.has_items():
-		return false
-		
-	if not BuildRegistry:
-		return false
-		
-	# Dictionary based iteration {item_id: count}
-	if "items" in rat_instance.inventory:
-		for item_id in rat_instance.inventory.items:
-			var buildable_id: String = BuildRegistry.get_buildable_id_from_cost(item_id)
-			if buildable_id != "":
-				# Is it actually a plant?
-				if BuildRegistry.is_buildable_a_plant(buildable_id):
-					# Found a valid seed! Try to plant it.
-					var plant_target: Vector2i = _find_planting_target()
-					if plant_target != Vector2i.MAX:
-						var current_grid: Vector2i = tile_map.local_to_map(rat_instance.global_position)
-						rat_instance.assign_task(current_grid, plant_target)
-						return true
-					
-	return false
-
-func _try_assign_delivery() -> bool:
-	if rat_instance.inventory.has_items():
-		var target_output: Vector2i = _get_next_valid_output()
-		if target_output != Vector2i.MAX:
-			var current_grid: Vector2i = tile_map.local_to_map(rat_instance.global_position)
-			rat_instance.assign_task(current_grid, target_output)
-			return true
-	return false
-
-func _try_assign_harvest() -> bool:
-	# Only harvest if we have capacity
+	# PRIORITY 1: DEPOSITING
+	# If full, must deposit.
 	if rat_instance.inventory.is_full():
-		return false
+		if _try_assign_deposit():
+			return
+			
+	# PRIORITY 2: HARVESTING (Standard)
+	# Harvest from sources.
+	if not rat_instance.inventory.is_full():
+		if _try_assign_harvest():
+			return
+			
+	# PRIORITY 3: FLUSH INVENTORY (Optional)
+	# If we have stuff and nothing else to do, try to deposit it.
+	if rat_instance.inventory.has_items():
+		_try_assign_deposit()
 
-	var target_output: Vector2i = _get_next_valid_output()
-	if target_output == Vector2i.MAX:
-		return false
-		
-	# Find best source relative to rat's current position
-	var best_source: Vector2i = _find_best_source(rat_instance.global_position)
-	
-	# Anti-Loop Logic: Prevent taking from X and putting into X
-	if best_source != Vector2i.MAX and best_source == target_output:
-		return false
 
-	if best_source != Vector2i.MAX:
-		rat_instance.assign_task(best_source, target_output)
+
+
+func _try_assign_deposit() -> bool:
+	# Find a valid output that accepts our items
+	var target: Vector2i = _get_next_valid_output_for_deposit()
+	if target != Vector2i.MAX:
+		rat_instance.assign_task(RatAssistant.TaskType.DEPOSIT, target)
 		return true
 	return false
 
-## Called by Rat when it finishes a harvest and wants more work nearby
-func assign_next_task_nearby(rat: RatAssistant) -> bool:
-	if assigned_outputs.is_empty(): return false
-	
-	# Priority 1: Plant if holding seeds (Round robin planting)
-	if _try_assign_planting():
-		return true
-	
-	# Priority 2: Deliver if full or holding items
-	if rat.inventory.is_full():
-		var target_output: Vector2i = _get_next_valid_output()
-		if target_output != Vector2i.MAX:
-			var current_grid: Vector2i = tile_map.local_to_map(rat.global_position)
-			rat.assign_task(current_grid, target_output)
-			return true
-	
-	# Priority 3: More harvest if space remains
-	if not rat.inventory.is_full():
-		var target_output: Vector2i = _get_next_valid_output()
-		if target_output == Vector2i.MAX: return false
-		
-		var best_source: Vector2i = _find_best_source(rat.global_position)
-		if best_source != Vector2i.MAX and best_source != target_output:
-			rat.assign_task(best_source, target_output)
-			return true
-		
-	return false
-
-## Helper to get next output in Round-Robin fashion.
-## NOTE: This now strictly looks for CONTAINERS (for delivery/storage).
-## Empty tiles (for planting) are handled by _find_planting_target().
-## Now supports smart filtering for Processors.
-func _get_next_valid_output() -> Vector2i:
+func _get_next_valid_output_for_deposit() -> Vector2i:
 	if assigned_outputs.is_empty(): return Vector2i.MAX
 	
-	# Try each output starting from current index
 	for i in range(assigned_outputs.size()):
 		var idx: int = (_output_rr_index + i) % assigned_outputs.size()
 		var coords: Vector2i = assigned_outputs[idx]
 		
-		# Strictly check for CONTAINER
-		var is_container: bool = false
-		var processor_wants_items: bool = true # Assume true for generics
-		
-		if planting_system:
-			var obj: Node2D = planting_system.get_object_at(coords)
-			if obj and obj.has_method("get_container"):
-				is_container = true
-				
-				# Smart Check: If it's a processor, does it want what we have?
-				if obj.has_method("get_wanted_item_id"):
-					var wanted: String = obj.get_wanted_item_id()
-					# If processor wants specific item, do we have it?
-					# If wanted is empty (no recipe), treat as rejecting everything
-					if wanted == "":
-						processor_wants_items = false
-					elif rat_instance and not rat_instance.inventory.has_item(wanted):
-						processor_wants_items = false
-		
-		if is_container and processor_wants_items and not _is_output_full(coords):
-			# Found a valid container
+		if _can_deposit_to(coords):
 			_output_rr_index = (idx + 1) % assigned_outputs.size()
 			return coords
 			
 	return Vector2i.MAX
 
-func _find_planting_target() -> Vector2i:
-	if not planting_system: return Vector2i.MAX
-	if assigned_outputs.is_empty(): return Vector2i.MAX
+func _can_deposit_to(coords: Vector2i) -> bool:
+	if not planting_system: return false
+	var obj = planting_system.get_object_at(coords)
+	if not obj or not obj.has_method("get_container"): return false
 	
-	# Round Robin for Planting
-	for i in range(assigned_outputs.size()):
-		var idx: int = (_planting_rr_index + i) % assigned_outputs.size()
-		var coords: Vector2i = assigned_outputs[idx]
+	# Check if processor/container wants our items
+	if obj.has_method("get_wanted_item_id"):
+		var wanted = obj.get_wanted_item_id()
+		if wanted == "": return false # Wants nothing
+		if not rat_instance.inventory.has_item(wanted): return false # We don't have it
 		
-		if not planting_system.is_tile_occupied(coords):
-			_planting_rr_index = (idx + 1) % assigned_outputs.size()
-			return coords
-			
-	return Vector2i.MAX
-
-## Check if output container is full
-func _is_output_full(coords: Vector2i) -> bool:
-	if not planting_system: return true
-	var obj: Node2D = planting_system.get_object_at(coords)
-	
-	if not obj:
-		# Empty tile is available (not full)
+	# Check if full
+	var container = obj.get_container()
+	if container and container.has_method("is_full") and container.is_full():
 		return false
 		
-	if not obj.has_method("get_container"): return true # Blocked by non-container
-	
-	var container: Object = obj.get_container()
-	if not container: return true
-	
-	if container.has_method("is_full"):
-		return container.is_full()
-		
+	return true
+
+func _try_assign_harvest() -> bool:
+	# Find best source
+	var best_source: Vector2i = _find_best_source(rat_instance.global_position)
+	if best_source != Vector2i.MAX:
+		rat_instance.assign_task(RatAssistant.TaskType.HARVEST, best_source)
+		return true
 	return false
 
-## Called by Rat when it becomes idle (e.g. after depositing)
-func on_rat_idle(_rat: RatAssistant) -> void:
+## Called by Rat when it finishes a task and wants more work nearby
+func on_rat_idle(rat: RatAssistant) -> void:
+	# Simply re-run the main assignment logic
 	_assign_next_task()
+	
+# Compatibility / Deprecated but kept for safety if needed
+func assign_next_task_nearby(rat: RatAssistant) -> bool:
+	on_rat_idle(rat)
+	return true
 
 func _find_best_source(from_pos: Vector2) -> Vector2i:
 	if not planting_system: return Vector2i.MAX
 	
 	var valid_sources: Array[Vector2i] = []
 	
-	# 1. Filter ready sources
 	for source in assigned_sources:
 		if _is_ready_harvest(source):
 			valid_sources.append(source)
@@ -372,8 +283,6 @@ func _find_best_source(from_pos: Vector2) -> Vector2i:
 	if valid_sources.is_empty():
 		return Vector2i.MAX
 		
-	# 2. Sort by distance to from_pos
-	# We need to convert map coords to world pos for distance
 	valid_sources.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		var pos_a: Vector2 = tile_map.map_to_local(a)
 		var pos_b: Vector2 = tile_map.map_to_local(b)
@@ -381,16 +290,6 @@ func _find_best_source(from_pos: Vector2) -> Vector2i:
 	)
 	
 	return valid_sources[0]
-
-func _is_valid_output(coords: Vector2i) -> bool:
-	if not planting_system: return false
-	var obj: Node2D = planting_system.get_object_at(coords)
-	
-	# Allow empty tiles (for planting)
-	if not obj: return true
-	
-	# Otherwise requires container
-	return obj.has_method("get_container")
 
 func _is_ready_harvest(coords: Vector2i) -> bool:
 	if not planting_system: return false
@@ -417,8 +316,9 @@ func can_set_output(coords: Vector2i) -> bool:
 	if not planting_system: return false
 	var obj: Node2D = planting_system.get_object_at(coords)
 	
-	# Allow empty tiles
-	if not obj: return true
+	# Allow empty tiles? NO, strictly containers for output now, 
+	# since planting target is determined by empty Sources.
+	if not obj: return false
 	
 	# Valid only if it has a container (storage buildings)
 	return obj.has_method("get_container")
@@ -443,38 +343,66 @@ func is_tile_assigned_to_others(coords: Vector2i) -> bool:
 			return true
 	return false
 
+func _resolve_source_tile(coords: Vector2i) -> Vector2i:
+	if not planting_system: return coords
+	var obj = planting_system.get_object_at(coords)
+	if obj and obj.has_method("get_harvest_tile"):
+		return obj.get_harvest_tile()
+	return coords
+
+func _resolve_output_tile(coords: Vector2i) -> Vector2i:
+	if not planting_system: return coords
+	var obj = planting_system.get_object_at(coords)
+	if obj and obj.has_method("get_deposit_tile"):
+		return obj.get_deposit_tile()
+	return coords
+
 func add_source(coords: Vector2i) -> bool:
+	var target = _resolve_source_tile(coords)
+	
 	if assigned_sources.size() >= MAX_SOURCES:
 		return false
-	if coords in assigned_sources:
+	if target in assigned_sources:
 		return false
+	
+	# Mutual Exclusivity Check
+	if target in assigned_outputs:
+		return false
+		
 	# Check valid object
 	if not can_add_source(coords):
 		return false
 	# Check overlap
-	if is_tile_assigned_to_others(coords):
+	if is_tile_assigned_to_others(target):
 		return false
 		
-	assigned_sources.append(coords)
+	assigned_sources.append(target)
 	if _visuals_overlay:
 		_visuals_overlay.queue_redraw()
 	return true
 
 func remove_source(coords: Vector2i) -> void:
-	assigned_sources.erase(coords)
+	var target = _resolve_source_tile(coords)
+	assigned_sources.erase(target)
 	if _visuals_overlay:
 		_visuals_overlay.queue_redraw()
 
 func toggle_output(coords: Vector2i) -> bool:
-	if coords in assigned_outputs:
-		assigned_outputs.erase(coords)
+	var target = _resolve_output_tile(coords)
+	
+	if target in assigned_outputs:
+		assigned_outputs.erase(target)
 		if _visuals_overlay:
 			_visuals_overlay.queue_redraw()
 		return true
 		
 	if assigned_outputs.size() < MAX_OUTPUTS:
 		if can_set_output(coords):
-			assigned_outputs.append(coords)
+			# Mutual Exclusivity Check
+			if target in assigned_sources:
+				return false
+				
+			assigned_outputs.append(target)
 			if _visuals_overlay:
 				_visuals_overlay.queue_redraw()
 			return true

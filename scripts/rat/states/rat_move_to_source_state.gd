@@ -1,11 +1,14 @@
-class_name RatMoveToSourceState
+class_name RatMoveState
 extends State
 
 @export var arrival_threshold: float = 4.0
 
 func enter() -> void:
-	# Recalculate position in case it moved? (Maybe not needed if set once)
-	pass
+	var rat: RatAssistant = entity as RatAssistant
+	if rat:
+		# Recalculate target position from coords to ensure it's up to date
+		if rat.tile_map:
+			rat.target_position = rat.tile_map.map_to_local(rat.target_coords)
 
 func physics_update(delta: float) -> void:
 	var rat: RatAssistant = entity as RatAssistant
@@ -28,33 +31,13 @@ func physics_update(delta: float) -> void:
 		rat.visuals.update_bob(delta, true)
 
 func _on_arrived(rat: RatAssistant) -> void:
-	# Check availability
-	var plant: Node2D = rat.planting_system.get_object_at(rat.target_coords) if rat.planting_system else null
-	
-	# If empty tile AND we have items (presumably seeds), we might be here to plant
-	if not plant:
-		if rat.inventory.has_items():
-			transition_requested.emit(self, "plant")
-		else:
-			_handle_failure(rat)
-		return
-	
-	if not plant.has_method("harvest"):
-		_handle_failure(rat)
-		return
-		
-	if plant.has_method("is_harvest_ready") and not plant.is_harvest_ready():
-		_handle_failure(rat)
-		return
-		
-	transition_requested.emit(self, "harvest")
-
-func _handle_failure(rat: RatAssistant) -> void:
-	if rat.inventory.has_items():
-		transition_requested.emit(self, "movetooutput")
-	else:
-		transition_requested.emit(self, "idle")
-		# Logic to try getting another task should be triggered here or in Idle
-		# The original code called assign_next_task_nearby from the house.
-		if rat.home_building and rat.home_building.has_method("assign_next_task_nearby"):
-			rat.home_building.assign_next_task_nearby(rat)
+	match rat.current_task:
+		RatAssistant.TaskType.HARVEST:
+			transition_requested.emit(self, "harvest")
+			
+		RatAssistant.TaskType.DEPOSIT:
+			transition_requested.emit(self, "deposit")
+			
+		_:
+			# Unknown task? Go idle.
+			transition_requested.emit(self, "idle")

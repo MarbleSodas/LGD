@@ -8,7 +8,7 @@ size = Vector2(24, 14)
 
 [node name="Barrel" type="Sprite2D"]
 texture = ExtResource("2_texture")
-offset = Vector2(0, -16)
+offset = Vector2(0, 0)
 script = ExtResource("1_script")
 storage_slots = 30
 

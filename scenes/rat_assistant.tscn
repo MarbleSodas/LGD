@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://1504s373281" path="res://scripts/rat/states/rat_move_to_output_state.gd" id="10_move_out"]
 [ext_resource type="Script" uid="uid://vovvdwbj2uq8" path="res://scripts/rat/states/rat_deposit_state.gd" id="11_deposit"]
 [ext_resource type="Script" uid="uid://by7682l3dinun" path="res://scripts/rat/states/rat_return_home_state.gd" id="12_return"]
-[ext_resource type="Script" uid="uid://draijilhin7un" path="res://scripts/rat/states/rat_plant_state.gd" id="13_plant"]
+
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rat"]
 radius = 6.0
@@ -79,5 +79,4 @@ script = ExtResource("11_deposit")
 [node name="ReturnHome" type="Node" parent="StateMachine"]
 script = ExtResource("12_return")
 
-[node name="Plant" type="Node" parent="StateMachine"]
-script = ExtResource("13_plant")
+

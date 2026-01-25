@@ -7,7 +7,7 @@ func physics_update(delta: float) -> void:
 	var rat: RatAssistant = entity as RatAssistant
 	if not rat: return
 	
-	var destination: Vector2 = rat.output_position
+	var destination: Vector2 = rat.target_position
 	var distance: float = rat.global_position.distance_to(destination)
 	
 	if distance <= arrival_threshold:
@@ -24,7 +24,7 @@ func physics_update(delta: float) -> void:
 		rat.visuals.update_bob(delta, true)
 
 func _on_arrived(rat: RatAssistant) -> void:
-	var building: Node2D = rat.planting_system.get_object_at(rat.output_coords) if rat.planting_system else null
+	var building: Node2D = rat.planting_system.get_object_at(rat.target_coords) if rat.planting_system else null
 	
 	if not building:
 		# Empty tile! Assume planting.

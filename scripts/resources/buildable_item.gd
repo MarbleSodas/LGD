@@ -31,6 +31,12 @@ extends Resource
 ## If true, ignores the system-wide plant_offset/preview_visual_offset
 @export var ignore_system_offset: bool = false
 
+## Footprint size in tiles (x=width, y=height)
+@export var footprint_size: Vector2i = Vector2i(1, 1)
+
+## If true, the building can be flipped horizontally (swapping input/output)
+@export var supports_flip: bool = false
+
 ## Dictionary of required materials: { "item_id": quantity }
 @export var build_costs: Dictionary = {}
 

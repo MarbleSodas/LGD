@@ -13,7 +13,11 @@ scene = ExtResource("3_scene")
 preview_texture = ExtResource("2_icon")
 preview_frame = 0
 preview_hframes = 1
-placement_offset = Vector2(0, 16)
+preview_offset = Vector2(0, 0)
+placement_offset = Vector2(0, 0)
+ignore_system_offset = false
+footprint_size = Vector2i(3, 1)
+supports_flip = true
 build_costs = {
 "wood": 20
 }

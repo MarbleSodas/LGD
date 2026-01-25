@@ -33,6 +33,8 @@ var preview_sprite: Sprite2D
 var show_grid: bool = false
 var can_place: bool = false
 var current_tile_center: Vector2 = Vector2.ZERO
+var current_flip_state: bool = false
+var last_buildable_id: String = ""
 
 # Bulk Placement State
 var bulk_start_tile: Vector2i = Vector2i.ZERO
@@ -99,10 +101,16 @@ func _update_preview() -> void:
 	var snapped_pos: Vector2 = tile_map.map_to_local(tile_coords)
 	
 	current_tile_center = snapped_pos
+	
 	queue_redraw()
 	
 	if preview_sprite.texture == null:
 		refresh_preview()
+		
+	var item: BuildableItem = BuildRegistry.active_buildable
+	if item and item.id != last_buildable_id:
+		current_flip_state = false
+		last_buildable_id = item.id
 		
 	if bulk_start_set:
 		preview_sprite.visible = false
@@ -113,15 +121,37 @@ func _update_preview() -> void:
 		can_place = _check_can_place(tile_coords, snapped_pos)
 		preview_sprite.modulate = preview_color_valid if can_place else preview_color_invalid
 
+func _get_footprint_offsets(item: BuildableItem) -> Array[Vector2i]:
+	var offsets: Array[Vector2i] = []
+	if not item: return [Vector2i.ZERO]
+	
+	var size = item.footprint_size
+	# Standard centering logic: center tile is at (floor(w/2), floor(h/2)) inside the footprint
+	var half_x = size.x / 2
+	var half_y = size.y / 2
+	
+	for x in range(-half_x, -half_x + size.x):
+		for y in range(-half_y, -half_y + size.y):
+			offsets.append(Vector2i(x, y))
+			
+	return offsets
+
 func _check_can_place(tile_coords: Vector2i, world_pos: Vector2) -> bool:
-	# Check 1: Tile occupied?
-	if planting_system.is_tile_occupied(tile_coords):
-		return false
+	var item: BuildableItem = BuildRegistry.active_buildable
+	var offsets = _get_footprint_offsets(item)
+	
+	for offset in offsets:
+		var check_coords = tile_coords + offset
+		var check_pos = tile_map.map_to_local(check_coords)
 		
-	# Check 2: Overlaps player?
-	if _overlaps_player(world_pos):
-		return false
-		
+		# Check 1: Tile occupied?
+		if planting_system.is_tile_occupied(check_coords):
+			return false
+			
+		# Check 2: Overlaps player?
+		if _overlaps_player(check_pos):
+			return false
+	
 	# Check 3: Can afford?
 	if not bulk_start_set and not _can_afford_placement(1):
 		return false
@@ -191,6 +221,13 @@ func handle_input(event: InputEvent) -> void:
 			BuildRegistry.clear_active()
 		return
 		
+	if event.is_action_pressed("rotate_build"):
+		var item: BuildableItem = BuildRegistry.active_buildable
+		if item and item.supports_flip:
+			current_flip_state = not current_flip_state
+			queue_redraw()
+		return
+		
 	if event.is_action_pressed("place"):
 		if bulk_start_set:
 			_place_bulk()
@@ -215,7 +252,9 @@ func _spawn_object(tile_coords: Vector2i, world_pos: Vector2) -> void:
 	if not item or not item.scene: return
 	
 	# Visuals
-	tile_map.set_cell(tile_coords, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
+	var offsets = _get_footprint_offsets(item)
+	for offset in offsets:
+		tile_map.set_cell(tile_coords + offset, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
 	
 	# Spawn
 	var instance: Node2D = item.scene.instantiate() as Node2D
@@ -226,6 +265,9 @@ func _spawn_object(tile_coords: Vector2i, world_pos: Vector2) -> void:
 		
 	instance.global_position = world_pos + final_offset
 	instance.set_meta("buildable_id", item.id)
+	
+	if instance.has_method("set_placement_data"):
+		instance.set_placement_data(tile_coords, current_flip_state)
 	
 	ysort_root.add_child(instance)
 	planting_system.register_object(tile_coords, instance)
@@ -285,6 +327,16 @@ func _get_bulk_rect(start: Vector2i, end: Vector2i) -> Rect2i:
 # ------------------------------------------------------------------------------
 
 func _draw_normal_grid() -> void:
+	# Draw footprint highlight if active item exists
+	var item: BuildableItem = BuildRegistry.active_buildable
+	if item:
+		var col = preview_color_valid if can_place else preview_color_invalid
+		var offsets = _get_footprint_offsets(item)
+		for offset in offsets:
+			var tile_local_pos = Vector2(offset.x * tile_size.x, offset.y * tile_size.y)
+			# Draw slightly thicker or distinct outline for footprint
+			_draw_tile_outline(current_tile_center + tile_local_pos, col)
+
 	for x in range(-grid_radius, grid_radius + 1):
 		for y in range(-grid_radius, grid_radius + 1):
 			var dist: int = maxi(absi(x), absi(y))

@@ -153,19 +153,43 @@ func get_object_at(coords: Vector2i) -> Node2D:
 
 ## Register an object at a coordinate (Internal use)
 func register_object(coords: Vector2i, object: Node2D) -> void:
-	occupied_tiles[coords] = object
+	if object.has_method("get_occupied_tiles"):
+		var tiles = object.get_occupied_tiles()
+		# Fallback if method returns empty (shouldn't happen for valid objects)
+		if tiles.is_empty():
+			occupied_tiles[coords] = object
+		else:
+			for tile in tiles:
+				occupied_tiles[tile] = object
+	else:
+		occupied_tiles[coords] = object
 
 ## Remove an object from a coordinate
 func remove_object(coords: Vector2i) -> bool:
 	if not is_tile_occupied(coords): return false
 	
 	var obj: Node2D = occupied_tiles[coords]
-	occupied_tiles.erase(coords)
+	
+	# Clear ALL occupied tiles for this object
+	if obj.has_method("get_occupied_tiles"):
+		var tiles = obj.get_occupied_tiles()
+		for tile in tiles:
+			occupied_tiles.erase(tile)
+	else:
+		# Fallback cleanup (scan just in case, or assume single tile)
+		# For safety, erase the target coords
+		occupied_tiles.erase(coords)
+		# If it was a multi-tile object without the method (legacy?), we might leave ghosts. 
+		# But we assume all multi-tile objects implement the interface.
 	
 	if is_instance_valid(obj):
 		obj.queue_free()
 		
 	return true
+
+## Get the building/object at a tile (Alias)
+func get_building_at_tile(coords: Vector2i) -> Node2D:
+	return get_object_at(coords)
 
 ## Plant an item at a specific coordinate programmatically
 func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
@@ -195,17 +219,27 @@ func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
 
 func to_save_data() -> Dictionary:
 	var plants_data: Array = []
+	var processed_objects: Dictionary = {}
 	
 	for tile_coords in occupied_tiles:
 		var plant: Node2D = occupied_tiles[tile_coords]
 		if not is_instance_valid(plant): continue
 		
+		# Deduplicate multi-tile objects
+		if processed_objects.has(plant): continue
+		processed_objects[plant] = true
+		
 		# Only save objects with a buildable_id
 		if not plant.has_meta("buildable_id"): continue
 		
+		var save_coords = tile_coords
+		# Ensure we save the center coordinate for multi-tile objects
+		if plant.has_method("get_center_tile"):
+			save_coords = plant.get_center_tile()
+		
 		var data: Dictionary = {
-			"x": tile_coords.x,
-			"y": tile_coords.y,
+			"x": save_coords.x,
+			"y": save_coords.y,
 			"buildable_id": plant.get_meta("buildable_id")
 		}
 		
@@ -245,8 +279,9 @@ func from_save_data(data: Dictionary) -> void:
 		instance.set_meta("buildable_id", id)
 		
 		ysort_root.add_child(instance)
-		register_object(coords, instance)
 		
-		# Restore State
+		# Restore State BEFORE registering (so orientation/footprint is known)
 		if instance.has_method("load_save_data"):
 			instance.load_save_data(entry)
+			
+		register_object(coords, instance)

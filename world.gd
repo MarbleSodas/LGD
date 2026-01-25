@@ -7,9 +7,11 @@ const SCENE_START_MENU: String = "res://scenes/start_menu/start_menu.tscn"
 
 # Starter resource positions (tile coordinates)
 const STARTER_TREES: Array = [
-	Vector2i(1, 1),
-	Vector2i(15, 3),
-	Vector2i(4, 12)
+	Vector2i(2, 2),
+	Vector2i(18, 3),
+	Vector2i(3, 15),
+	Vector2i(16, 14),
+	Vector2i(10, 9)
 ]
 const STARTER_MUSHROOMS: Array = [
 	Vector2i(12, 10),

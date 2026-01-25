@@ -1,5 +1,5 @@
 class_name StorageBuilding
-extends Sprite2D
+extends DirectionalBuilding
 
 ## Base class for buildable storage structures (barrels, chests, etc.)
 ## Handles interaction and container management.
@@ -14,8 +14,21 @@ var is_interacting: bool = false
 var _current_panel: Control = null
 
 func _ready() -> void:
+	super._ready()
 	# Initialize the container
 	container = ContainerInventory.new(storage_slots)
+
+# --- IO Interface for Rats ---
+
+## Returns the tile coordinates where rats should deposit items
+func get_deposit_tile() -> Vector2i:
+	return get_input_tile()
+
+## Returns the tile coordinates where rats should harvest items
+func get_harvest_tile() -> Vector2i:
+	return get_output_tile()
+
+# --- Interaction ---
 
 ## Called by PlantingSystem when player interacts
 func interact() -> void:
@@ -118,9 +131,22 @@ func harvest(max_amount: int = 10) -> Dictionary:
 
 func get_save_data() -> Dictionary:
 	return {
-		"container": container.to_save_data()
+		"container": container.to_save_data(),
+		"is_flipped": is_flipped,
+		"center_tile_x": center_tile.x,
+		"center_tile_y": center_tile.y,
+		"version": 2
 	}
 
 func load_save_data(data: Dictionary) -> void:
 	if data.has("container"):
 		container.from_save_data(data["container"])
+		
+	if data.has("is_flipped"):
+		is_flipped = data["is_flipped"]
+		
+	if data.has("center_tile_x") and data.has("center_tile_y"):
+		center_tile = Vector2i(data["center_tile_x"], data["center_tile_y"])
+	
+	# Update orientation (for visuals and logic)
+	_update_orientation()

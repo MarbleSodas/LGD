@@ -183,7 +183,7 @@ func is_buildable_a_plant(id: String) -> bool:
 	var is_plant: bool = false
 	
 	# Check if it inherits from Plant class (by class_name or script)
-	if instance.has_method("is_harvest_ready"): # Duck typing for Plant
+	if instance is Plant: # Stronger check than duck typing
 		is_plant = true
 	
 	instance.free()

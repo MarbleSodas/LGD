@@ -33,7 +33,7 @@ func get_harvest_tile() -> Vector2i:
 ## Called by PlantingSystem when player interacts
 func interact() -> void:
 	is_interacting = true
-	
+
 	# Find the ContainerPanel in the UI and open it
 	var ui_layer: Node = get_tree().get_first_node_in_group(GROUP_UI_LAYER)
 	if ui_layer:
@@ -42,7 +42,7 @@ func interact() -> void:
 			_current_panel = container_panel
 			container_panel.open(container, "Storage Barrel", self) # TODO: Make title configurable
 			return
-			
+
 	# Fallback search if group not set
 	var current_scene: Node = get_tree().current_scene
 	var ui: Node = current_scene.get_node_or_null("UI")
@@ -71,7 +71,7 @@ func _notify_interaction_manager_closed() -> void:
 		var root: Node = get_tree().current_scene
 		if root.has_node("PlantingSystem"):
 			planting_system = root.get_node("PlantingSystem")
-			
+
 	if planting_system and planting_system.interaction_manager:
 		planting_system.interaction_manager.on_building_closed(self)
 
@@ -88,39 +88,39 @@ func is_harvest_ready() -> bool:
 func harvest(max_amount: int = 10) -> Dictionary:
 	if not container or container.is_empty():
 		return {}
-	
+
 	var harvested_items: Array[Dictionary] = []
 	var remaining: int = max_amount
-	
+
 	for i in range(container.slot_count):
 		if remaining <= 0:
 			break
-			
+
 		var slot: Variant = container.get_slot(i)
 		if slot == null:
 			continue
-		
+
 		var available: int = slot.count
 		var take_amount: int = mini(available, remaining)
 		var item_id: String = slot.item.id
-		
+
 		container.remove_item(i, take_amount)
-		
+
 		harvested_items.append({"item_id": item_id, "amount": take_amount})
 		remaining -= take_amount
-	
+
 	if harvested_items.is_empty():
 		return {}
-	
+
 	# Format result
 	var result: Dictionary = {
 		"item_id": harvested_items[0]["item_id"],
 		"amount": harvested_items[0]["amount"]
 	}
-	
+
 	if harvested_items.size() > 1:
 		result["extra_items"] = harvested_items.slice(1)
-		
+
 	return result
 
 # ------------------------------------------------------------------------------
@@ -141,12 +141,12 @@ func get_save_data() -> Dictionary:
 func load_save_data(data: Dictionary) -> void:
 	if data.has("container"):
 		container.from_save_data(data["container"])
-		
+
 	if data.has("is_flipped"):
 		is_flipped = data["is_flipped"]
-		
+
 	if data.has("center_tile_x") and data.has("center_tile_y"):
 		center_tile = Vector2i(data["center_tile_x"], data["center_tile_y"])
-	
+
 	# Update orientation (for visuals and logic)
 	_update_orientation()

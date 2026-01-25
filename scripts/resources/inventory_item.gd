@@ -11,7 +11,7 @@ extends Resource
 @export var icon: Texture2D
 
 ## Maximum stack size (1 = non-stackable)
-@export var max_stack: int = 99
+@export var max_stack: int = 400
 
 ## Item description for tooltips (future)
 @export var description: String = ""

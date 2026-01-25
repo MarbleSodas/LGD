@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://dqsrn7y6jyswc" path="res://scripts/rat/states/rat_idle_state.gd" id="7_idle"]
 [ext_resource type="Script" uid="uid://bpiec7hkymbwp" path="res://scripts/rat/states/rat_move_to_source_state.gd" id="8_move"]
 [ext_resource type="Script" uid="uid://4f2mldwq2cvk" path="res://scripts/rat/states/rat_harvest_state.gd" id="9_harvest"]
-[ext_resource type="Script" uid="uid://1504s373281" path="res://scripts/rat/states/rat_move_to_output_state.gd" id="10_move_out"]
 [ext_resource type="Script" uid="uid://vovvdwbj2uq8" path="res://scripts/rat/states/rat_deposit_state.gd" id="11_deposit"]
 [ext_resource type="Script" uid="uid://by7682l3dinun" path="res://scripts/rat/states/rat_return_home_state.gd" id="12_return"]
 
@@ -69,9 +68,6 @@ script = ExtResource("8_move")
 
 [node name="Harvest" type="Node" parent="StateMachine"]
 script = ExtResource("9_harvest")
-
-[node name="MoveToOutput" type="Node" parent="StateMachine"]
-script = ExtResource("10_move_out")
 
 [node name="Deposit" type="Node" parent="StateMachine"]
 script = ExtResource("11_deposit")

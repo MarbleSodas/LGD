@@ -172,22 +172,11 @@ func get_buildable_id_from_cost(item_id: String) -> String:
 	return ""
 
 ## Check if the buildable item is actually a Plant (vs a Building).
-## Instantiates the scene temporarily to check its type.
 func is_buildable_a_plant(id: String) -> bool:
 	if not _all_items.has(id): return false
 	
 	var item: BuildableItem = _all_items[id]
-	if not item.scene: return false
-	
-	var instance = item.scene.instantiate()
-	var is_plant: bool = false
-	
-	# Check if it inherits from Plant class (by class_name or script)
-	if instance is Plant: # Stronger check than duck typing
-		is_plant = true
-	
-	instance.free()
-	return is_plant
+	return item.buildable_type == BuildableItem.BuildableType.PLANT
 
 # ------------------------------------------------------------------------------
 # Internal

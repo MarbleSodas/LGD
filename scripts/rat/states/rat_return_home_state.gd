@@ -7,7 +7,8 @@ func enter() -> void:
 	var rat: RatAssistant = entity as RatAssistant
 	if rat:
 		# Drop items? Original code: inventory.clear() + update visual
-		rat.inventory.clear()
+		# FIX: Don't clear inventory so items persist
+		# rat.inventory.clear()
 		if rat.visuals: rat.visuals.update_held_item_visual()
 
 func physics_update(delta: float) -> void:

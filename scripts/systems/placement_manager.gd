@@ -82,7 +82,7 @@ func update(_delta: float) -> void:
 func _draw() -> void:
 	if not show_grid:
 		return
-		
+
 	if bulk_start_set:
 		_draw_bulk_selection()
 	else:
@@ -95,89 +95,89 @@ func _draw() -> void:
 func _update_preview() -> void:
 	if not tile_map or not player:
 		return
-		
+
 	var mouse_world_pos: Vector2 = get_global_mouse_position()
 	var tile_coords: Vector2i = tile_map.local_to_map(mouse_world_pos)
 	var snapped_pos: Vector2 = tile_map.map_to_local(tile_coords)
-	
+
 	current_tile_center = snapped_pos
-	
+
 	queue_redraw()
-	
+
 	if preview_sprite.texture == null:
 		refresh_preview()
-		
+
 	var item: BuildableItem = BuildRegistry.active_buildable
 	if item and item.id != last_buildable_id:
 		current_flip_state = false
 		last_buildable_id = item.id
-		
+
 	if bulk_start_set:
 		preview_sprite.visible = false
 	else:
 		preview_sprite.global_position = snapped_pos + plant_offset
 		preview_sprite.visible = true
-		
+
 		can_place = _check_can_place(tile_coords, snapped_pos)
 		preview_sprite.modulate = preview_color_valid if can_place else preview_color_invalid
 
 func _get_footprint_offsets(item: BuildableItem) -> Array[Vector2i]:
 	var offsets: Array[Vector2i] = []
 	if not item: return [Vector2i.ZERO]
-	
+
 	var size = item.footprint_size
 	# Standard centering logic: center tile is at (floor(w/2), floor(h/2)) inside the footprint
 	var half_x = size.x / 2
 	var half_y = size.y / 2
-	
+
 	for x in range(-half_x, -half_x + size.x):
 		for y in range(-half_y, -half_y + size.y):
 			offsets.append(Vector2i(x, y))
-			
+
 	return offsets
 
-func _check_can_place(tile_coords: Vector2i, world_pos: Vector2) -> bool:
+func _check_can_place(tile_coords: Vector2i, _world_pos: Vector2) -> bool:
 	var item: BuildableItem = BuildRegistry.active_buildable
 	var offsets = _get_footprint_offsets(item)
-	
+
 	for offset in offsets:
 		var check_coords = tile_coords + offset
 		var check_pos = tile_map.map_to_local(check_coords)
-		
+
 		# Check 1: Tile occupied?
 		if planting_system.is_tile_occupied(check_coords):
 			return false
-			
+
 		# Check 2: Overlaps player?
 		if _overlaps_player(check_pos):
 			return false
-	
+
 	# Check 3: Can afford?
 	if not bulk_start_set and not _can_afford_placement(1):
 		return false
-		
+
 	return true
 
 func _overlaps_player(tile_center: Vector2) -> bool:
 	if not player: return false
-	
+
 	var collision_shape: CollisionShape2D = player.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if not collision_shape: return false
-	
+
 	var shape: RectangleShape2D = collision_shape.shape as RectangleShape2D
 	if not shape: return false
-	
+
 	var player_pos: Vector2 = player.global_position + collision_shape.position
 	var player_rect: Rect2 = Rect2(player_pos - shape.size / 2.0, shape.size)
 	var tile_rect: Rect2 = Rect2(tile_center - tile_size / 2.0, tile_size)
-	
+
 	return player_rect.intersects(tile_rect)
 
 func _can_afford_placement(count: int) -> bool:
 	var item: BuildableItem = BuildRegistry.active_buildable
 	if not item or item.build_costs.is_empty():
 		return true
-		
+
 	for material_id in item.build_costs:
 		var required: int = item.build_costs[material_id] * count
 		if Inventory.count_item(material_id) < required:
@@ -188,7 +188,7 @@ func _consume_materials(count: int) -> bool:
 	var item: BuildableItem = BuildRegistry.active_buildable
 	if not item or item.build_costs.is_empty():
 		return true
-		
+
 	for material_id in item.build_costs:
 		var required: int = item.build_costs[material_id] * count
 		if not Inventory.consume_item(material_id, required):
@@ -198,7 +198,7 @@ func _consume_materials(count: int) -> bool:
 func refresh_preview() -> void:
 	var item: BuildableItem = BuildRegistry.active_buildable
 	if not item: return
-	
+
 	if item.preview_texture:
 		preview_sprite.texture = item.preview_texture
 		preview_sprite.hframes = item.preview_hframes
@@ -220,14 +220,14 @@ func handle_input(event: InputEvent) -> void:
 		else:
 			BuildRegistry.clear_active()
 		return
-		
+
 	if event.is_action_pressed("rotate_build"):
 		var item: BuildableItem = BuildRegistry.active_buildable
 		if item and item.supports_flip:
 			current_flip_state = not current_flip_state
 			queue_redraw()
 		return
-		
+
 	if event.is_action_pressed("place"):
 		if bulk_start_set:
 			_place_bulk()
@@ -240,35 +240,35 @@ func _place_single() -> void:
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var tile_coords: Vector2i = tile_map.local_to_map(mouse_pos)
 	var snapped_pos: Vector2 = tile_map.map_to_local(tile_coords)
-	
+
 	if not _check_can_place(tile_coords, snapped_pos):
 		return
-		
+
 	if _consume_materials(1):
 		_spawn_object(tile_coords, snapped_pos)
 
 func _spawn_object(tile_coords: Vector2i, world_pos: Vector2) -> void:
 	var item: BuildableItem = BuildRegistry.active_buildable
 	if not item or not item.scene: return
-	
+
 	# Visuals
 	var offsets = _get_footprint_offsets(item)
 	for offset in offsets:
 		tile_map.set_cell(tile_coords + offset, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
-	
+
 	# Spawn
 	var instance: Node2D = item.scene.instantiate() as Node2D
-	
+
 	var final_offset: Vector2 = item.placement_offset
 	if not item.ignore_system_offset:
 		final_offset += plant_offset
-		
+
 	instance.global_position = world_pos + final_offset
 	instance.set_meta("buildable_id", item.id)
-	
+
 	if instance.has_method("set_placement_data"):
 		instance.set_placement_data(tile_coords, current_flip_state)
-	
+
 	ysort_root.add_child(instance)
 	planting_system.register_object(tile_coords, instance)
 
@@ -292,10 +292,10 @@ func _place_bulk() -> void:
 	if not tile_map: return
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var end_tile: Vector2i = tile_map.local_to_map(mouse_pos)
-	
+
 	var rect: Rect2i = _get_bulk_rect(bulk_start_tile, end_tile)
 	var tiles_to_place: Array[Vector2i] = []
-	
+
 	# Validate all
 	for x in range(rect.position.x, rect.end.x):
 		for y in range(rect.position.y, rect.end.y):
@@ -303,16 +303,16 @@ func _place_bulk() -> void:
 			var world_pos: Vector2 = tile_map.map_to_local(coords)
 			if not planting_system.is_tile_occupied(coords) and not _overlaps_player(world_pos):
 				tiles_to_place.append(coords)
-				
+
 	# Cost check
 	if tiles_to_place.is_empty(): return
 	if not _can_afford_placement(tiles_to_place.size()): return
 	if not _consume_materials(tiles_to_place.size()): return
-	
+
 	# Place
 	for coords in tiles_to_place:
 		_spawn_object(coords, tile_map.map_to_local(coords))
-		
+
 	_cancel_bulk_mode()
 
 func _get_bulk_rect(start: Vector2i, end: Vector2i) -> Rect2i:
@@ -343,7 +343,7 @@ func _draw_normal_grid() -> void:
 			var alpha: float = 1.0 - (float(dist) / float(grid_radius + 1))
 			var col: Color = grid_outline_color
 			col.a *= alpha
-			
+
 			var offset: Vector2 = Vector2(x * tile_size.x, y * tile_size.y)
 			_draw_tile_outline(current_tile_center + offset, col)
 
@@ -352,11 +352,11 @@ func _draw_bulk_selection() -> void:
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var end_tile: Vector2i = tile_map.local_to_map(mouse_pos)
 	var rect: Rect2i = _get_bulk_rect(bulk_start_tile, end_tile)
-	
+
 	# Check validity for color
 	var all_valid: bool = true
 	var count: int = 0
-	
+
 	for x in range(rect.position.x, rect.end.x):
 		for y in range(rect.position.y, rect.end.y):
 			count += 1
@@ -365,28 +365,28 @@ func _draw_bulk_selection() -> void:
 			if planting_system.is_tile_occupied(coords) or _overlaps_player(w_pos):
 				all_valid = false
 				break
-				
+
 	if all_valid and not _can_afford_placement(count):
 		all_valid = false
-		
+
 	# UI Update
 	if bulk_cost_panel and bulk_cost_panel.has_method("update_costs"):
 		bulk_cost_panel.update_costs(BuildRegistry.active_buildable, count, all_valid)
-		
+
 	# Draw
 	var preview_tex: Texture2D = preview_sprite.texture
 	var frame_w: float = float(preview_tex.get_width()) / float(preview_sprite.hframes)
 	var src_rect: Rect2 = Rect2(frame_w * preview_sprite.frame, 0, frame_w, preview_tex.get_height())
 	var col: Color = preview_color_valid if all_valid else preview_color_invalid
-	
+
 	for x in range(rect.position.x, rect.end.x):
 		for y in range(rect.position.y, rect.end.y):
 			var coords: Vector2i = Vector2i(x, y)
 			var w_pos: Vector2 = tile_map.map_to_local(coords)
-			
+
 			var outline: Color = bulk_start_marker_color if coords == bulk_start_tile else grid_outline_color
 			_draw_tile_outline(w_pos, outline)
-			
+
 			# Draw Texture
 			var draw_pos: Vector2 = to_local(w_pos + plant_offset) + preview_sprite.offset
 			var dest_rect: Rect2 = Rect2(draw_pos - Vector2(frame_w/2, preview_tex.get_height()/2.0), Vector2(frame_w, preview_tex.get_height()))
@@ -399,7 +399,7 @@ func _draw_tile_outline(center: Vector2, color: Color) -> void:
 	var top_right: Vector2 = local_center + Vector2(half.x, -half.y)
 	var bottom_right: Vector2 = local_center + Vector2(half.x, half.y)
 	var bottom_left: Vector2 = local_center + Vector2(-half.x, half.y)
-	
+
 	draw_line(top_left, top_right, color, grid_outline_width)
 	draw_line(top_right, bottom_right, color, grid_outline_width)
 	draw_line(bottom_right, bottom_left, color, grid_outline_width)

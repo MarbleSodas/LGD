@@ -11,6 +11,7 @@ region = Rect2(64, 0, 32, 32)
 [resource]
 script = ExtResource("1_script")
 id = "dandelion"
+buildable_type = 0
 display_name = "Dandelion"
 icon = SubResource("AtlasTexture_icon")
 scene = ExtResource("3_scene")

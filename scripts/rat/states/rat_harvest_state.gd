@@ -43,6 +43,28 @@ func _complete_harvest(rat: RatAssistant) -> void:
 			drops = obj.harvest(space_left)
 		else:
 			# Plant: Standard harvest
+			# Check if we have enough space for the harvest
+			var estimated_amount: int = 1
+			if "harvest_amount" in obj:
+				estimated_amount = obj.harvest_amount
+			
+			# If harvesting would exceed capacity (strict check)
+			if space_left < estimated_amount:
+				# Try to deposit immediately
+				var deposit_assigned: bool = false
+				if rat.home_building and rat.home_building.has_method("try_assign_deposit"):
+					deposit_assigned = rat.home_building.try_assign_deposit(true) # Force assign
+				
+				if deposit_assigned:
+					# Deposit task assigned successfully.
+					# The assign_task call triggers transition to 'move', so we just return.
+					return
+				
+				# If we couldn't assign deposit (e.g. outputs full), go to Idle.
+				rat.task_completed.emit(rat.target_coords) # Optional: signal we are done here (failed/skipped)
+				transition_requested.emit(self, "idle")
+				return
+
 			if space_left > 0:
 				drops = obj.harvest()
 			
@@ -65,5 +87,11 @@ func _complete_harvest(rat: RatAssistant) -> void:
 
 	rat.task_completed.emit(rat.target_coords)
 	
-	# Always go to Idle to get next assignment
+	# Try to get next task immediately without going to idle
+	if rat.home_building and rat.home_building.has_method("assign_next_task"):
+		if rat.home_building.assign_next_task(true):
+			# Task assigned successfully, transitioned to 'move'
+			return
+
+	# If no task found, go to Idle to wait
 	transition_requested.emit(self, "idle")

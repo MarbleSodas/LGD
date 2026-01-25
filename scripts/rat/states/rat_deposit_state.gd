@@ -56,4 +56,10 @@ func _complete_deposit(rat: RatAssistant) -> void:
 				for id in deposited_items:
 					rat.inventory.remove_item(id, rat.inventory.items[id])
 
+	# Try to get next task immediately without going to idle
+	if rat.home_building and rat.home_building.has_method("assign_next_task"):
+		if rat.home_building.assign_next_task(true):
+			# Task assigned successfully, transitioned to 'move'
+			return
+
 	transition_requested.emit(self, "idle")

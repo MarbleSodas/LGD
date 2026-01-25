@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="InventoryItem" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="InventoryItem" load_steps=3 format=3 uid="uid://cynl1dh0ugdt"]
 
-[ext_resource type="Script" path="res://scripts/resources/inventory_item.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/objects/items/Wood.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://buyenlpcejuxh" path="res://scripts/resources/inventory_item.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://q4undyd7m2ag" path="res://assets/objects/items/Wood.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
 id = "wood"
 display_name = "Wood"
 icon = ExtResource("2_icon")
-max_stack = 99
+max_stack = 400
 description = "A standard piece of wood."
 category = "Material"

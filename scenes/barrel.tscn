@@ -1,19 +1,17 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://023pbxtnavgs"]
 
-[ext_resource type="Script" path="res://scripts/storage_building.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/objects/buildings/Barrel.png" id="2_texture"]
+[ext_resource type="Script" uid="uid://cnksfl7hpvfn4" path="res://scripts/storage_building.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b4o0h1vqvol02" path="res://assets/objects/buildings/Barrel.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_barrel"]
 size = Vector2(24, 14)
 
 [node name="Barrel" type="Sprite2D"]
 texture = ExtResource("2_texture")
-offset = Vector2(0, 0)
 script = ExtResource("1_script")
-storage_slots = 30
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(0, -7)
+position = Vector2(0, 8)
 shape = SubResource("RectangleShape2D_barrel")

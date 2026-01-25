@@ -104,10 +104,30 @@ func _update_preview() -> void:
 			_highlight_plant(hovered_plant)
 
 func _delete_single(coords: Vector2i) -> void:
+	var obj = planting_system.get_object_at(coords)
+	if obj:
+		_refund_object(obj)
+
 	if planting_system.remove_object(coords):
 		# Restore tile visual
 		tile_map.set_cell(coords, GRASS_SOURCE_ID, Vector2i.ZERO)
 		_clear_plant_highlight()
+
+func _refund_object(obj: Node2D) -> void:
+	if not is_instance_valid(obj) or not obj.has_meta("buildable_id"):
+		return
+		
+	var buildable_id: String = obj.get_meta("buildable_id")
+	var buildable: BuildableItem = BuildRegistry.get_item(buildable_id)
+	
+	if not buildable:
+		return
+		
+	for material_id in buildable.build_costs:
+		var amount: int = buildable.build_costs[material_id]
+		var item: InventoryItem = ItemRegistry.get_item(material_id)
+		if item:
+			Inventory.add_item(item, amount)
 
 # --- Bulk Logic ---
 
@@ -137,6 +157,10 @@ func _execute_bulk_delete() -> void:
 				to_delete.append(coords)
 	
 	for coords in to_delete:
+		var obj = planting_system.get_object_at(coords)
+		if obj:
+			_refund_object(obj)
+
 		if planting_system.remove_object(coords):
 			tile_map.set_cell(coords, GRASS_SOURCE_ID, Vector2i.ZERO)
 			

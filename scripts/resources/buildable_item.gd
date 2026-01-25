@@ -1,8 +1,12 @@
 class_name BuildableItem
 extends Resource
 
+enum BuildableType { PLANT, BUILDING }
+
 ## Unique identifier for the item (e.g., "dandelion")
 @export var id: String = ""
+
+@export var buildable_type: BuildableType = BuildableType.PLANT
 
 ## Name displayed in the UI
 @export var display_name: String = ""

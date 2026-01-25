@@ -24,6 +24,7 @@ growth_stages = Array[Dictionary]([{
 harvest_item_id = "wood"
 harvest_amount = 3
 harvest_time = 3.0
+regrows = true
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 

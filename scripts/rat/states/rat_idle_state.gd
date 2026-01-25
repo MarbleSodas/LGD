@@ -16,6 +16,16 @@ func enter() -> void:
 		# Ask for work immediately upon becoming idle
 		if rat.home_building and rat.home_building.has_method("on_rat_idle"):
 			rat.home_building.on_rat_idle(rat)
+			
+		# Hide rat if at home
+		if rat.home_building:
+			var home_pos: Vector2 = rat.home_building.global_position
+			if rat.home_building.has_method("get_rest_position"):
+				home_pos = rat.home_building.get_rest_position()
+			
+			if rat.global_position.distance_to(home_pos) <= arrival_threshold:
+				if rat.visuals:
+					rat.visuals.set_visible_in_world(false)
 
 func update(delta: float) -> void:
 	_idle_timer += delta

@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_script")
 id = "processor"
+buildable_type = 1
 display_name = "Processor"
 icon = ExtResource("2_icon")
 scene = ExtResource("3_scene")
@@ -16,8 +17,8 @@ preview_hframes = 1
 preview_offset = Vector2(0, 0)
 placement_offset = Vector2(0, 0)
 ignore_system_offset = false
-footprint_size = Vector2i(3, 1)
-supports_flip = true
+footprint_size = Vector2i(1, 1)
+supports_flip = false
 build_costs = {
 "wood": 10
 }

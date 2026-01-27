@@ -78,15 +78,10 @@ func handle_input(event: InputEvent) -> void:
 	if event.is_action_pressed("harvest"):
 		# Case 1: Toggle logic for building interactions
 		if current_interacting_building:
-			if hovered_object == current_interacting_building:
-				# Same building - toggle off (close)
-				_close_current_interaction()
-				get_viewport().set_input_as_handled()
-				return
-			else:
-				# Different building - close current first, then allow open new
-				_close_current_interaction()
-				# Fall through to standard interaction check below
+			# If interaction is open, ANY interact press should close it
+			_close_current_interaction()
+			get_viewport().set_input_as_handled()
+			return
 		
 		# Case 2: Standard Interaction
 		if hovered_object and _is_in_range(hovered_object):
@@ -214,7 +209,7 @@ func _complete_harvest() -> void:
 		var amount = drops.get("amount", 1)
 		if item:
 			Inventory.add_item(item, amount)
-			_spawn_text(target.global_position, "+%d %s" % [amount, item.display_name])
+			_spawn_text(target.global_position, "+%d" % amount, item.icon)
 
 	# Check if destroyed
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
@@ -232,11 +227,13 @@ func _cancel_harvest() -> void:
 		current_progress_bar.queue_free()
 		current_progress_bar = null
 
-func _spawn_text(pos: Vector2, text: String) -> void:
+func _spawn_text(pos: Vector2, text: String, icon: Texture2D = null) -> void:
 	var popup = floating_text_scene.instantiate()
 	get_parent().get_parent().add_child(popup) # Add to World or UI
 	popup.global_position = pos + Vector2(0, -20)
-	if popup.has_method("set_text_content"):
+	if popup.has_method("set_content"):
+		popup.set_content(text, icon)
+	elif popup.has_method("set_text_content"):
 		popup.set_text_content(text)
 	else:
 		popup.text = text

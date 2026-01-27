@@ -4,6 +4,7 @@ extends Node2D
 const TREE_RES = preload("res://resources/buildables/tree.tres")
 const MUSHROOM_RES = preload("res://resources/buildables/mushroom_plant.tres")
 const STONE_RES = preload("res://resources/buildables/stone_deposit.tres")
+const INTRO_DIALOGUE_RES = preload("res://resources/dialogues/intro_awakening.tres")
 
 const AUTO_SAVE_INTERVAL: float = 60.0
 const NODE_UI: String = "UI"
@@ -58,6 +59,7 @@ func _ready() -> void:
 	# Spawn starter resources for new worlds (deferred to ensure PlantingSystem is ready)
 	if is_new_world:
 		call_deferred("_spawn_starter_resources")
+		call_deferred("_play_intro")
 		
 	# Setup auto-save
 	auto_save_timer = Timer.new()
@@ -86,6 +88,35 @@ func _spawn_starter_resources() -> void:
 	# Spawn stone deposits
 	for tile_coords in starter_stone_deposits:
 		planting_system.plant_item_at(tile_coords, "stone_deposit") 
+
+func _play_intro() -> void:
+	var ui_layer: Node = _get_ui_layer()
+	if not ui_layer:
+		push_error("UI layer not found, cannot play intro")
+		return
+	
+	var overlay: Control = ui_layer.get_node_or_null("IntroFadeOverlay")
+	if not overlay:
+		push_error("IntroFadeOverlay not found in UI layer")
+		return
+	
+	# Start with full opacity
+	overlay.visible = true
+	overlay.modulate.a = 1.0
+	
+	# Fade out over 1.5 seconds
+	var tween: Tween = create_tween()
+	tween.tween_property(overlay, "modulate:a", 0.0, 1.5)
+	
+	# Start dialogue when fade completes
+	tween.finished.connect(func():
+		DialogueManager.start_dialogue(INTRO_DIALOGUE_RES)
+	)
+	
+	# Hide overlay when dialogue finishes
+	DialogueManager.dialogue_finished.connect(func():
+		overlay.visible = false
+	, CONNECT_ONE_SHOT) 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

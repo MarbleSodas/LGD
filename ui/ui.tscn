@@ -76,6 +76,8 @@ slot_index = 9
 
 [node name="BulkCostPanel" parent="." instance=ExtResource("7_bulk_cost")]
 
+[node name="RefundPanel" parent="." instance=ExtResource("7_bulk_cost")]
+
 [node name="DeleteModeOverlay" parent="." instance=ExtResource("6_overlay")]
 
 [node name="ContainerPanel" parent="." instance=ExtResource("8_container")]
@@ -89,6 +91,16 @@ visible = false
 visible = false
 
 [node name="RatManagerPanel" parent="." instance=ExtResource("10_rat_panel")]
+visible = false
+
+[node name="IntroFadeOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 visible = false
 
 [node name="DialogueBox" parent="." instance=ExtResource("12_dialogue_box")]

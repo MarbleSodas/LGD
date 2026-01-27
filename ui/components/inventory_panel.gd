@@ -43,6 +43,7 @@ func _process(_delta: float) -> void:
 		cursor_preview.global_position = get_global_mouse_position() - (cursor_preview.size / 2.0)
 
 func _input(event: InputEvent) -> void:
+	if DialogueManager and DialogueManager.is_active(): return
 	if event.is_action_pressed("toggle_inventory"):
 		if Inventory and Inventory.is_holding_item():
 			Inventory.return_held_item()

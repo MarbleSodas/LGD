@@ -70,6 +70,7 @@ func _update_slot_icon(slot: int, item: BuildableItem) -> void:
 			slots[slot].set_item(null, 0)  # Clear icon
 
 func _unhandled_input(event: InputEvent) -> void:
+	if DialogueManager and DialogueManager.is_active(): return
 	if event.is_action_pressed("hotbar_1"): _toggle_slot(0)
 	elif event.is_action_pressed("hotbar_2"): _toggle_slot(1)
 	elif event.is_action_pressed("hotbar_3"): _toggle_slot(2)

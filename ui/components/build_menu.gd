@@ -21,6 +21,7 @@ func _ready() -> void:
 		BuildRegistry.buildable_unlocked.connect(_on_buildable_unlocked)
 
 func _input(event: InputEvent) -> void:
+	if DialogueManager and DialogueManager.is_active(): return
 	if event.is_action_pressed("toggle_build_menu"):
 		toggle()
 

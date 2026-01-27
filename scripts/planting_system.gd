@@ -65,7 +65,8 @@ func _setup_managers() -> void:
 	placement_manager.setup(self, tile_map, ysort_root, player, bulk_panel)
 	
 	var delete_overlay: Control = ui_root.get_node_or_null("DeleteModeOverlay") if ui_root else null
-	deletion_manager.setup(self, tile_map, delete_overlay)
+	var refund_panel: Control = ui_root.get_node_or_null("RefundPanel") if ui_root else null
+	deletion_manager.setup(self, tile_map, delete_overlay, refund_panel)
 	
 	var interact_area: Area2D = player.get_node_or_null("InteractArea") if player else null
 	if not interact_area and player and player.has_method("get_interact_area"):
@@ -122,6 +123,9 @@ func _process(delta: float) -> void:
 		Mode.NONE: interaction_manager.update(delta)
 
 func _input(event: InputEvent) -> void:
+	if DialogueManager and DialogueManager.is_active():
+		return
+
 	# Global Toggle: Delete Mode (F)
 	if event.is_action_pressed("toggle_delete_mode"):
 		if current_mode == Mode.DELETE:

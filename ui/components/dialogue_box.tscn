@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dti8jq5547sy8"]
+[gd_scene load_steps=11 format=3 uid="uid://dti8jq5547sy8"]
 
 [ext_resource type="Script" uid="uid://wwr20jjlr1au" path="res://ui/components/dialogue_box.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_a7q27"]
@@ -6,6 +6,12 @@
 [ext_resource type="Texture2D" uid="uid://doshn3xus71rx" path="res://assets/sproutlands/Sprite sheets/Dialouge UI/dialog box character finished talking click to continue indicator - spritesheet .png" id="4_indicator"]
 [ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="5_theme"]
 [ext_resource type="Texture2D" uid="uid://bjkem86ewmhva" path="res://assets/sproutlands/Sprite sheets/Dialouge UI/Emotes/Teemo Basic emote animations sprite sheet.png" id="6_teemo"]
+[ext_resource type="Animation" uid="uid://b8raj4k5l6m7n" path="res://ui/resources/dialogue_indicator_bounce.tres" id="8_anim"]
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_bounce"]
+_data = {
+&"bounce": ExtResource("8_anim")
+}
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1gsld"]
 atlas = ExtResource("2_a7q27")
@@ -23,6 +29,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_bounce")
+}
 
 [node name="Overlay" type="ColorRect" parent="."]
 layout_mode = 1
@@ -136,20 +147,11 @@ theme_override_colors/default_color = Color(0, 0, 0, 1)
 bbcode_enabled = true
 text = "This is some dialogue text that goes here."
 
-[node name="ContinueIndicator" type="TextureRect" parent="DialoguePanel"]
+[node name="ContinueIndicator" type="AnimatedSprite2D" parent="DialoguePanel"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -30.0
-offset_top = -30.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 0
-grow_vertical = 0
-texture = ExtResource("4_indicator")
-expand_mode = 1
-stretch_mode = 5
+position = Vector2(480, 120)
+scale = Vector2(2, 2)
+sprite_frames = ExtResource("7_frames")
+autoplay = "default"
+
+

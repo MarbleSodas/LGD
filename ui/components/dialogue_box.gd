@@ -123,9 +123,8 @@ func _on_typing_finished() -> void:
 	emit_signal("line_displayed")
 
 func _play_indicator_anim() -> void:
-	var tween = create_tween().set_loops()
-	tween.tween_property(continue_indicator, "position:y", continue_indicator.position.y - 5, 0.5).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(continue_indicator, "position:y", continue_indicator.position.y, 0.5).set_trans(Tween.TRANS_SINE)
+	if has_node("AnimationPlayer"):
+		$AnimationPlayer.play("bounce")
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

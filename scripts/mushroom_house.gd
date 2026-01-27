@@ -260,8 +260,13 @@ func _can_deposit_to(coords: Vector2i) -> bool:
 	return true
 
 func _try_assign_harvest(force: bool = false) -> bool:
+	var required_item: String = ""
+	# If holding items, restrict harvest to same item type
+	if rat_instance.inventory.has_items():
+		required_item = rat_instance.inventory.get_first_item_id()
+
 	# Find best source
-	var best_source: Vector2i = _find_best_source(rat_instance.global_position)
+	var best_source: Vector2i = _find_best_source(rat_instance.global_position, required_item)
 	if best_source != Vector2i.MAX:
 		rat_instance.assign_task(RatAssistant.TaskType.HARVEST, best_source, force)
 		return true
@@ -276,13 +281,19 @@ func on_rat_idle(_rat: RatAssistant) -> void:
 func assign_next_task_nearby(_rat: RatAssistant) -> bool:
 	return assign_next_task()
 
-func _find_best_source(from_pos: Vector2) -> Vector2i:
+func _find_best_source(from_pos: Vector2, required_item: String = "") -> Vector2i:
 	if not planting_system: return Vector2i.MAX
 
 	var valid_sources: Array[Vector2i] = []
 
 	for source in assigned_sources:
 		if _is_ready_harvest(source):
+			# Filter by item type if required
+			if required_item != "":
+				var source_item = _get_source_item_id(source)
+				if source_item != required_item:
+					continue
+					
 			valid_sources.append(source)
 
 	if valid_sources.is_empty():
@@ -295,6 +306,27 @@ func _find_best_source(from_pos: Vector2) -> Vector2i:
 	)
 
 	return valid_sources[0]
+
+func _get_source_item_id(coords: Vector2i) -> String:
+	if not planting_system: return ""
+	var obj: Node2D = planting_system.get_object_at(coords)
+	if not obj: return ""
+	
+	# Plant
+	if "harvest_item_id" in obj:
+		return obj.harvest_item_id
+		
+	# Storage / Container
+	if obj.has_method("get_container"):
+		var container = obj.get_container()
+		if container:
+			# Check first occupied slot
+			for i in range(container.slot_count):
+				var slot = container.get_slot(i)
+				if slot != null:
+					return slot.item.id
+	
+	return ""
 
 func _is_ready_harvest(coords: Vector2i) -> bool:
 	if not planting_system: return false

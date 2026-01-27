@@ -11,7 +11,6 @@ region = Rect2(64, 0, 32, 32)
 [resource]
 script = ExtResource("3_script")
 id = "mushroom_plant"
-buildable_type = 0
 display_name = "Mushroom"
 icon = SubResource("AtlasTexture_icon")
 scene = ExtResource("2_scene")

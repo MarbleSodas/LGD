@@ -131,8 +131,25 @@ func _is_in_range(target: Node2D) -> bool:
 	if not is_instance_valid(target) or not interact_area: return false
 	
 	# Simple distance check based on InteractArea radius (approx 36 + buffer)
-	# Assuming radius is roughly 36 from previous code
-	var max_dist = 52.0 # 36 + 16 buffer
+	var max_dist = 64.0 # Increased from 52 to allow slightly more leniency for large objects
+	
+	# Check distance to ANY occupied tile for multi-tile objects
+	if target.has_method("get_occupied_tiles"):
+		var tiles = target.get_occupied_tiles()
+		if not tiles.is_empty():
+			var min_dist = 9999.0
+			var interact_pos = interact_area.global_position
+			
+			for tile_coords in tiles:
+				# Get center of the tile
+				var tile_center = tile_map.map_to_local(tile_coords)
+				var dist = interact_pos.distance_to(tile_center)
+				if dist < min_dist:
+					min_dist = dist
+					
+			return min_dist <= max_dist
+
+	# Fallback: Distance to object origin
 	return target.global_position.distance_to(interact_area.global_position) <= max_dist
 
 func _interact_with(target: Node2D) -> void:

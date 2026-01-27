@@ -210,10 +210,32 @@ func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
 	instance.global_position = pos + final_offset
 	instance.set_meta("buildable_id", buildable_id)
 	
+	if instance.has_method("set_placement_data"):
+		instance.set_placement_data(coords, false)
+	
+	# Clear ground tiles based on footprint
+	var offsets = _get_footprint_offsets(item)
+	for offset in offsets:
+		tile_map.set_cell(coords + offset, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
+	
 	ysort_root.add_child(instance)
 	register_object(coords, instance)
 	
 	return true
+
+func _get_footprint_offsets(item: BuildableItem) -> Array[Vector2i]:
+	var offsets: Array[Vector2i] = []
+	if not item: return [Vector2i.ZERO]
+	
+	var size = item.footprint_size
+	var half_x = size.x / 2
+	var half_y = size.y / 2
+	
+	for x in range(-half_x, -half_x + size.x):
+		for y in range(-half_y, -half_y + size.y):
+			offsets.append(Vector2i(x, y))
+			
+	return offsets
 
 # --- Save / Load ---
 

@@ -101,10 +101,14 @@ func _update_preview() -> void:
 		_clear_plant_highlight()
 		hovered_plant = plant
 		if hovered_plant:
-			_highlight_plant(hovered_plant)
+			if not hovered_plant.get("is_permanent"):
+				_highlight_plant(hovered_plant)
 
 func _delete_single(coords: Vector2i) -> void:
 	var obj = planting_system.get_object_at(coords)
+	if obj and obj.get("is_permanent"):
+		return
+		
 	if obj:
 		_refund_object(obj)
 
@@ -158,6 +162,9 @@ func _execute_bulk_delete() -> void:
 	
 	for coords in to_delete:
 		var obj = planting_system.get_object_at(coords)
+		if obj and obj.get("is_permanent"):
+			continue
+			
 		if obj:
 			_refund_object(obj)
 

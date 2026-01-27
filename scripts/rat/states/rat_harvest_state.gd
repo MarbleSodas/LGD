@@ -4,12 +4,24 @@ extends State
 @export var harvest_duration: float = 0.8
 
 var _timer: float = 0.0
+var _current_duration: float = 0.0
 
 func enter() -> void:
 	_timer = 0.0
+	_current_duration = harvest_duration
+	
 	var rat: RatAssistant = entity as RatAssistant
-	if rat and rat.visuals:
-		rat.visuals.reset_bob()
+	if rat:
+		# Determine dynamic duration from target
+		var obj = rat.target_container
+		if not obj and rat.planting_system:
+			obj = rat.planting_system.get_object_at(rat.target_coords)
+			
+		if obj and "harvest_time" in obj:
+			_current_duration = obj.harvest_time
+		
+		if rat.visuals:
+			rat.visuals.reset_bob()
 
 func update(delta: float) -> void:
 	_timer += delta
@@ -19,7 +31,7 @@ func update(delta: float) -> void:
 	if rat.visuals:
 		rat.visuals.update_bob(delta, false)
 	
-	if _timer >= harvest_duration:
+	if _timer >= _current_duration:
 		_complete_harvest(rat)
 
 func _complete_harvest(rat: RatAssistant) -> void:

@@ -16,6 +16,8 @@ var planting_system: PlantingSystem
 var tile_map: TileMapLayer
 var delete_overlay: Control
 
+var floating_text_scene = preload("res://ui/components/floating_text.tscn")
+
 # --- State ---
 var show_grid: bool = false
 var current_tile_center: Vector2 = Vector2.ZERO
@@ -126,12 +128,20 @@ func _refund_object(obj: Node2D) -> void:
 	
 	if not buildable:
 		return
+	
+	var y_offset: int = 0
 		
 	for material_id in buildable.build_costs:
 		var amount: int = buildable.build_costs[material_id]
 		var item: InventoryItem = ItemRegistry.get_item(material_id)
 		if item:
 			Inventory.add_item(item, amount)
+			
+			var popup = floating_text_scene.instantiate()
+			get_tree().current_scene.add_child(popup)
+			popup.global_position = obj.global_position + Vector2(0, -20 + y_offset)
+			popup.set_content("+" + str(amount), item.icon)
+			y_offset -= 20
 
 # --- Bulk Logic ---
 

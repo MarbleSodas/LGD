@@ -3,14 +3,22 @@
 [ext_resource type="FontFile" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="1_font"]
 [ext_resource type="Script" path="res://ui/components/floating_text.gd" id="2_script"]
 
-[node name="FloatingText" type="Label"]
+[node name="FloatingText" type="HBoxContainer"]
 offset_right = 40.0
 offset_bottom = 23.0
+alignment = 1
+script = ExtResource("2_script")
+
+[node name="Icon" type="TextureRect" parent="."]
+layout_mode = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("1_font")
 theme_override_font_sizes/font_size = 10
 text = "+1 Dandelion"
-horizontal_alignment = 1
 vertical_alignment = 1
-script = ExtResource("2_script")

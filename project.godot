@@ -26,9 +26,9 @@ DialogueManager="*res://scripts/autoloads/dialogue_manager.gd"
 
 [display]
 
-window/size/window_width_override=1152
-window/size/window_height_override=648
-window/stretch/mode="canvas_items"
+window/size/viewport_width=1024
+window/size/viewport_height=512
+window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 mouse_cursor/custom_image="uid://743t21nwkxn8"
 

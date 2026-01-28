@@ -1,30 +1,58 @@
-[gd_resource type="SpriteFrames" load_steps=5 format=3 uid="uid://c8q4j2k3l4m5n"]
+[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://c8q4j2k3l4m5n"]
 
 [ext_resource type="Texture2D" uid="uid://doshn3xus71rx" path="res://assets/sproutlands/Sprite sheets/Dialouge UI/dialog box character finished talking click to continue indicator - spritesheet .png" id="1_tex"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_o5ync"]
 atlas = ExtResource("1_tex")
-region = Rect2(0, 0, 32, 32)
+region = Rect2(0, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_2"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_4alca"]
 atlas = ExtResource("1_tex")
-region = Rect2(32, 0, 32, 32)
+region = Rect2(16, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_50wwf"]
 atlas = ExtResource("1_tex")
-region = Rect2(64, 0, 32, 32)
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4rr36"]
+atlas = ExtResource("1_tex")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lewby"]
+atlas = ExtResource("1_tex")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rrg4p"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2soc2"]
+atlas = ExtResource("1_tex")
+region = Rect2(96, 0, 16, 16)
 
 [resource]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_1")
+"texture": SubResource("AtlasTexture_o5ync")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2")
+"texture": SubResource("AtlasTexture_4alca")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3")
+"texture": SubResource("AtlasTexture_50wwf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4rr36")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lewby")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rrg4p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2soc2")
 }],
 "loop": true,
 "name": &"default",

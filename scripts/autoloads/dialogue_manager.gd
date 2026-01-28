@@ -2,6 +2,7 @@ extends Node
 
 signal dialogue_started
 signal dialogue_finished
+signal line_started(index: int)
 
 var is_dialogue_active: bool = false
 var dialogue_box: Control
@@ -15,6 +16,9 @@ func register_dialogue_box(box: Control) -> void:
 	# Check if signal is already connected to avoid errors on reload
 	if not dialogue_box.dialogue_completed.is_connected(_on_dialogue_box_completed):
 		dialogue_box.dialogue_completed.connect(_on_dialogue_box_completed)
+	
+	if not dialogue_box.line_started.is_connected(_on_line_started):
+		dialogue_box.line_started.connect(_on_line_started)
 
 func start_dialogue(resource: DialogueResource) -> void:
 	if is_dialogue_active: return
@@ -46,6 +50,9 @@ func mark_shown(dialogue_id: String) -> void:
 
 func _on_dialogue_box_completed() -> void:
 	close_dialogue()
+
+func _on_line_started(index: int) -> void:
+	emit_signal("line_started", index)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_dialogue_active: return

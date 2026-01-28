@@ -29,6 +29,54 @@ func update_costs(buildable: BuildableItem, tile_count: int, can_afford: bool) -
 	
 	show()
 
+## Update the panel with refund information
+func update_refunds(buildable: BuildableItem) -> void:
+	if buildable == null:
+		hide()
+		return
+	
+	title_label.text = "Refund: %s" % [buildable.display_name]
+	
+	# Clear existing items
+	for child in cost_container.get_children():
+		child.queue_free()
+	
+	# Add refund items
+	if buildable.build_costs.is_empty():
+		hide()
+		return
+		
+	for material_id in buildable.build_costs:
+		var amount = buildable.build_costs[material_id]
+		var item_data = ItemRegistry.get_item(material_id) if ItemRegistry else null
+		
+		_add_refund_item(item_data, amount)
+	
+	show()
+
+func _add_refund_item(item: InventoryItem, amount: int) -> void:
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 4)
+	
+	# Icon
+	if item and item.icon:
+		var icon = TextureRect.new()
+		icon.texture = item.icon
+		icon.custom_minimum_size = Vector2(20, 20)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		hbox.add_child(icon)
+	
+	# Amount label: "+amount"
+	var label = Label.new()
+	label.text = "+%d" % [amount]
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color(0.4, 0.8, 0.4))  # Green for gain
+	
+	hbox.add_child(label)
+	cost_container.add_child(hbox)
+
 func _add_cost_item(item: InventoryItem, required: int, available: int, _can_afford: bool) -> void:
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)

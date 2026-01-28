@@ -1,6 +1,7 @@
 extends Control
 
 signal line_displayed
+signal line_started(index: int)
 signal dialogue_completed
 
 @onready var speaker_label = %SpeakerLabel
@@ -89,6 +90,8 @@ func advance() -> void:
 func _show_current_line() -> void:
 	is_typing = true
 	continue_indicator.visible = false
+	
+	emit_signal("line_started", current_line_index)
 	
 	var text = current_dialogue.lines[current_line_index]
 	

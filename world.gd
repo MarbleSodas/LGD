@@ -104,19 +104,30 @@ func _play_intro() -> void:
 	overlay.visible = true
 	overlay.modulate.a = 1.0
 	
-	# Fade out over 1.5 seconds
-	var tween: Tween = create_tween()
-	tween.tween_property(overlay, "modulate:a", 0.0, 1.5)
+	# Start dialogue immediately
+	DialogueManager.start_dialogue(INTRO_DIALOGUE_RES)
 	
-	# Start dialogue when fade completes
-	tween.finished.connect(func():
-		DialogueManager.start_dialogue(INTRO_DIALOGUE_RES)
-	)
+	# Listen for specific line to trigger fade
+	# Using CONNECT_ONE_SHOT to ensure it only happens once
+	if not DialogueManager.line_started.is_connected(_on_intro_line_started):
+		DialogueManager.line_started.connect(_on_intro_line_started.bind(overlay), CONNECT_ONE_SHOT)
 	
-	# Hide overlay when dialogue finishes
+	# Hide overlay when dialogue finishes (safeguard)
 	DialogueManager.dialogue_finished.connect(func():
 		overlay.visible = false
-	, CONNECT_ONE_SHOT) 
+		if DialogueManager.line_started.is_connected(_on_intro_line_started):
+			DialogueManager.line_started.disconnect(_on_intro_line_started)
+	, CONNECT_ONE_SHOT)
+
+func _on_intro_line_started(index: int, overlay: Control) -> void:
+	# Trigger fade on the second line (index 1)
+	# Lines: 0="...", 1="Where... am I?", 2="I should look around."
+	if index == 1:
+		var tween: Tween = create_tween()
+		tween.tween_property(overlay, "modulate:a", 0.0, 1.5)
+		# Re-connect for subsequent lines if needed? No, purely one-shot for now.
+		# If we wanted multi-stage fade, we'd need more logic.
+ 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

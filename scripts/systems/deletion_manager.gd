@@ -15,6 +15,7 @@ extends Node2D
 var planting_system: PlantingSystem
 var tile_map: TileMapLayer
 var delete_overlay: Control
+var refund_panel: Control
 
 var floating_text_scene = preload("res://ui/components/floating_text.tscn")
 
@@ -34,10 +35,11 @@ const GRASS_SOURCE_ID: int = 0
 func _ready() -> void:
 	name = "DeletionManager"
 
-func setup(system: PlantingSystem, _tile_map: TileMapLayer, _overlay: Control) -> void:
+func setup(system: PlantingSystem, _tile_map: TileMapLayer, _overlay: Control, _refund_panel: Control = null) -> void:
 	planting_system = system
 	tile_map = _tile_map
 	delete_overlay = _overlay
+	refund_panel = _refund_panel
 
 # --- Public API ---
 
@@ -51,6 +53,7 @@ func deactivate() -> void:
 	_cancel_bulk_delete()
 	_clear_plant_highlight()
 	if delete_overlay: delete_overlay.hide_overlay()
+	if refund_panel: refund_panel.hide()
 	queue_redraw()
 
 func update(_delta: float) -> void:
@@ -200,6 +203,13 @@ func _highlight_plant(plant: Node2D) -> void:
 		plant.set_meta("original_modulate", plant.modulate)
 	plant.modulate = delete_highlight_color
 
+	if refund_panel and plant.has_meta("buildable_id"):
+		var buildable_id = plant.get_meta("buildable_id")
+		var buildable = BuildRegistry.get_item(buildable_id)
+		if buildable:
+			if refund_panel.has_method("update_refunds"):
+				refund_panel.update_refunds(buildable)
+
 func _clear_plant_highlight() -> void:
 	if is_instance_valid(last_hovered_plant):
 		var orig = last_hovered_plant.get_meta("original_modulate", Color.WHITE)
@@ -207,6 +217,9 @@ func _clear_plant_highlight() -> void:
 		last_hovered_plant.remove_meta("original_modulate")
 	last_hovered_plant = null
 	hovered_plant = null
+	
+	if refund_panel:
+		refund_panel.hide()
 
 func _draw_delete_grid() -> void:
 	for x in range(-grid_radius, grid_radius + 1):

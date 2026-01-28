@@ -69,6 +69,6 @@ debug_color = Color(0.180392, 0.611765, 0.407843, 0.419608)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 physics_interpolation_mode = 2
-zoom = Vector2(2, 2)
+zoom = Vector2(1, 1)
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0

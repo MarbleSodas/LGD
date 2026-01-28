@@ -1,13 +1,23 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3 uid="uid://d3x1y2oam4k3"]
 
-[ext_resource type="Script" path="res://ui/components/build_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
-[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+[ext_resource type="Script" uid="uid://bnr01consfq2f" path="res://ui/components/build_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_spritesheet"]
+[ext_resource type="Theme" uid="uid://beisgsnx4rkgk" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" uid="uid://dei8dj7kcm0i7" path="res://ui/components/tip_icon.tscn" id="4_tip"]
+[ext_resource type="Texture2D" uid="uid://ch3t0i153nto5" path="res://assets/sproutlands/Sprite sheets/Icons/white icons.png" id="5_icons"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
 bg_color = Color(0.639, 0.463, 0.337, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tip_normal"]
+atlas = ExtResource("5_icons")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tip_new"]
+atlas = ExtResource("5_icons")
+region = Rect2(0, 16, 16, 16)
 
 [node name="BuildMenu" type="Control"]
 layout_mode = 3
@@ -58,12 +68,38 @@ custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_header")
 
-[node name="Header" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Header" type="Label" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel/HBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.918, 0.831, 0.667, 1)
 theme_override_font_sizes/font_size = 14
 text = "BUILD"
 horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TipIcon" parent="Panel/MarginContainer/VBoxContainer/HeaderPanel/HBoxContainer" instance=ExtResource("4_tip")]
+layout_mode = 2
+size_flags_vertical = 4
+tip_id = "build_menu_hotbar_assign"
+tip_text = "Press on a hotbar key while hovering over a build selection to assign it to the hotbar"
+normal_texture = SubResource("AtlasTexture_tip_normal")
+new_texture = SubResource("AtlasTexture_tip_new")
+
+[node name="SearchBar" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Search..."
+alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2

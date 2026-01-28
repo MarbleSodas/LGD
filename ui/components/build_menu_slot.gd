@@ -20,21 +20,34 @@ func _ready() -> void:
 	# Initialize visual state immediately
 	_update_visual_state()
 	
+	# Update content if item was set before ready
+	if buildable_item:
+		_update_content()
+	
 	# Set up mouse handling
 	mouse_filter = MouseFilter.MOUSE_FILTER_STOP
-	mouse_entered.connect(_on_mouse_entered)
-	mouse_exited.connect(_on_mouse_exited)
+	if not mouse_entered.is_connected(_on_mouse_entered):
+		mouse_entered.connect(_on_mouse_entered)
+	if not mouse_exited.is_connected(_on_mouse_exited):
+		mouse_exited.connect(_on_mouse_exited)
 	
 	# Autoloads (Inventory) are not available in the editor
 	if not Engine.is_editor_hint() and Inventory:
-		Inventory.inventory_changed.connect(_on_inventory_changed)
+		if not Inventory.inventory_changed.is_connected(_on_inventory_changed):
+			Inventory.inventory_changed.connect(_on_inventory_changed)
 	
 func setup(item: BuildableItem) -> void:
 	buildable_item = item
-	if icon_rect and item.icon:
-		icon_rect.texture = item.icon
+	if is_node_ready():
+		_update_content()
+
+func _update_content() -> void:
+	if not buildable_item: return
+	
+	if icon_rect and buildable_item.icon:
+		icon_rect.texture = buildable_item.icon
 	if name_label:
-		name_label.text = item.display_name
+		name_label.text = buildable_item.display_name
 	_update_cost_display()
 
 func _on_mouse_entered() -> void:

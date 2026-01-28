@@ -126,7 +126,9 @@ func save_game(world_id: String) -> bool:
 		"timestamp": Time.get_datetime_string_from_system(),
 		"inventory": Inventory.to_save_data(),
 		"planting": {}, # Will be filled if PlantingSystem is found
-		"player": {}
+		"tips": TipsManager.to_save_data(),
+		"player": {},
+		"ui_state": {}
 	}
 	
 	# Get data from active scene nodes
@@ -146,6 +148,11 @@ func save_game(world_id: String) -> bool:
 		var planting_system: Node = tree.current_scene.find_child("PlantingSystem", true, false)
 		if planting_system and planting_system.has_method("to_save_data"):
 			save_data["planting"] = planting_system.to_save_data()
+			
+		# Find BuildMenu and save UI state
+		var build_menu: Control = tree.current_scene.find_child("BuildMenu", true, false)
+		if build_menu and build_menu.has_method("get_category_states"):
+			save_data["ui_state"]["build_menu_collapsed"] = build_menu.get_category_states()
 			
 	# 3. Write Save File
 	return _save_json(world_dir + "/" + SAVE_FILE, save_data)
@@ -192,6 +199,16 @@ func _apply_save_data(data: Dictionary) -> void:
 			var planting_system: Node = tree.current_scene.find_child("PlantingSystem", true, false)
 			if planting_system and planting_system.has_method("from_save_data"):
 				planting_system.from_save_data(data["planting"])
+
+	# Apply Tips
+	if data.has("tips"):
+		TipsManager.from_save_data(data["tips"])
+
+	# Apply UI state
+	if data.has("ui_state") and data["ui_state"].has("build_menu_collapsed"):
+		var build_menu: Control = tree.current_scene.find_child("BuildMenu", true, false)
+		if build_menu and build_menu.has_method("set_category_states"):
+			build_menu.set_category_states(data["ui_state"]["build_menu_collapsed"])
 
 # ------------------------------------------------------------------------------
 # Helpers

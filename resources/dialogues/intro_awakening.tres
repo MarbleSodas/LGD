@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="DialogueResource" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="DialogueResource" load_steps=3 format=3 uid="uid://b835syoac05yq"]
 
-[ext_resource type="Script" path="res://scripts/resources/dialogue_resource.gd" id="1"]
-[ext_resource type="Texture2D" path="res://resources/ui/player_portrait.tres" id="2"]
+[ext_resource type="Script" uid="uid://d10y68jdlor51" path="res://scripts/resources/dialogue_resource.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://r3ay0mo3mlxs" path="res://resources/ui/player_portrait.tres" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -9,4 +9,3 @@ dialogue_id = "intro_awakening"
 speaker_name = "???"
 portrait = ExtResource("2")
 lines = Array[String](["...", "Where... am I?", "I should look around."])
-translation_keys = Array[String]([])

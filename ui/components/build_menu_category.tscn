@@ -1,0 +1,86 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/components/build_menu_category.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://ui/resources/atlas/build_menu/slot_normal.tres" id="2_bg"]
+[ext_resource type="Theme" path="res://themes/sproutlands_ui_theme.tres" id="3_theme"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_button"]
+
+[node name="BuildMenuCategory" type="VBoxContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme = ExtResource("3_theme")
+theme_override_constants/separation = 0
+script = ExtResource("1_script")
+
+[node name="HeaderPanel" type="NinePatchRect" parent="."]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("2_bg")
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="HeaderButton" type="Button" parent="HeaderPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_button")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_button")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_button")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_button")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_button")
+flat = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HeaderPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Spacer" type="Control" parent="HeaderPanel/HBoxContainer"]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ArrowLabel" type="Label" parent="HeaderPanel/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.298, 0.22, 1)
+text = "▼"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="HeaderPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 0.298, 0.22, 1)
+theme_override_font_sizes/font_size = 16
+text = "Category Name"
+vertical_alignment = 1
+
+[node name="AnimationWrapper" type="Control" parent="."]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="ItemsContainer" type="VBoxContainer" parent="AnimationWrapper"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 0.0
+grow_horizontal = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 2

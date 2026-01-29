@@ -17,18 +17,23 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-BuildRegistry="*res://scripts/autoloads/build_registry.gd"
+DataManager="*res://scripts/autoloads/data_manager.gd"
+Registries="*res://scripts/autoloads/registries.gd"
+BuildRegistry="*res://scripts/autoloads/registries.gd"
 Inventory="*res://scripts/autoloads/inventory.gd"
-ItemRegistry="*res://scripts/autoloads/item_registry.gd"
-GameState="*res://scripts/autoloads/game_state.gd"
+ItemRegistry="*res://scripts/autoloads/registries.gd"
+GameState="*res://scripts/autoloads/data_manager.gd"
 SaveManager="*res://scripts/autoloads/save_manager.gd"
-TipsManager="*res://scripts/autoloads/tips_manager.gd"
 DialogueManager="*res://scripts/autoloads/dialogue_manager.gd"
+TipsManager="*res://scripts/autoloads/data_manager.gd"
+GameServices="*res://scripts/autoloads/game_services.gd"
 
 [display]
 
 window/size/viewport_width=1024
 window/size/viewport_height=512
+window/size/window_width_override=1152
+window/size/window_height_override=648
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 mouse_cursor/custom_image="uid://743t21nwkxn8"

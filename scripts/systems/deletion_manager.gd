@@ -127,7 +127,7 @@ func _refund_object(obj: Node2D) -> void:
 		return
 		
 	var buildable_id: String = obj.get_meta("buildable_id")
-	var buildable: BuildableItem = BuildRegistry.get_item(buildable_id)
+	var buildable: BuildableItem = BuildRegistry.get_buildable(buildable_id)
 	
 	if not buildable:
 		return
@@ -205,7 +205,7 @@ func _highlight_plant(plant: Node2D) -> void:
 
 	if refund_panel and plant.has_meta("buildable_id"):
 		var buildable_id = plant.get_meta("buildable_id")
-		var buildable = BuildRegistry.get_item(buildable_id)
+		var buildable = BuildRegistry.get_buildable(buildable_id)
 		if buildable:
 			if refund_panel.has_method("update_refunds"):
 				refund_panel.update_refunds(buildable)

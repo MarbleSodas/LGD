@@ -204,7 +204,7 @@ func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
 	if is_tile_occupied(coords):
 		return false
 		
-	var item: BuildableItem = BuildRegistry.get_item(buildable_id)
+	var item: BuildableItem = BuildRegistry.get_buildable(buildable_id)
 	if not item or not item.scene:
 		return false
 		
@@ -291,7 +291,7 @@ func from_save_data(data: Dictionary) -> void:
 		var coords: Vector2i = Vector2i(entry["x"], entry["y"])
 		var id: String = entry.get("buildable_id", "")
 		
-		var item: BuildableItem = BuildRegistry.get_item(id)
+		var item: BuildableItem = BuildRegistry.get_buildable(id)
 		if not item or not item.scene: continue
 		
 		# Spawn

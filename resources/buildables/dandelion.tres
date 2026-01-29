@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://d5bipq1wj4on" path="res://assets/objects/plants/Dandelion.png" id="2_icon"]
-[ext_resource type="PackedScene" path="res://scenes/dandelion.tscn" id="3_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/buildables/plants/dandelion.tscn" id="3_scene"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_icon"]
 atlas = ExtResource("2_icon")

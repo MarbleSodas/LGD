@@ -136,6 +136,13 @@ theme_override_colors/default_color = Color(0, 0, 0, 1)
 bbcode_enabled = true
 text = "This is some dialogue text that goes here."
 
+[node name="ActionButtons" type="HBoxContainer" parent="DialoguePanel/HBoxContainer/Content/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
 [node name="ContinueIndicator" type="AnimatedSprite2D" parent="DialoguePanel"]
 unique_name_in_owner = true
 position = Vector2(485, 104)

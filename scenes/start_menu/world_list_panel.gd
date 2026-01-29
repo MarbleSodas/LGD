@@ -2,7 +2,7 @@ extends CanvasLayer
 
 # Preloads
 const WORLD_ITEM_SCENE = preload("res://scenes/start_menu/world_list_item.tscn")
-const WORLD_SCENE_PATH = "res://world.tscn"
+const WORLD_SCENE_PATH = "res://scenes/world/world.tscn"
 
 # Nodes
 @onready var world_container = $Control/Panel/MarginContainer/VBoxContainer/ScrollContainer/WorldList

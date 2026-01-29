@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="BuildableItem" load_steps=5 format=3 uid="uid://o0djp10yiec"]
 
 [ext_resource type="Texture2D" uid="uid://dt7yymkjq2fca" path="res://assets/objects/plants/Mushroom.png" id="1_icon"]
-[ext_resource type="PackedScene" path="res://scenes/mushroom_plant.tscn" id="2_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/buildables/plants/mushroom_plant.tscn" id="2_scene"]
 [ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="3_script"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_icon"]

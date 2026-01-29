@@ -1,0 +1,22 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" uid="uid://npc_base_scene_uid" path="res://scenes/npc_base.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/npcs/glider.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/Glider.png" id="3_tex"]
+[ext_resource type="Resource" path="res://resources/dialogues/glider_intro.tres" id="4_intro"]
+[ext_resource type="Resource" path="res://resources/npc_actions/glider_talk.tres" id="5_action"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wander"]
+radius = 128.0
+
+[node name="Glider" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+intro_dialogue = ExtResource("4_intro")
+actions = Array[Resource]([ExtResource("5_action")])
+
+[node name="Sprite2D" parent="." index="1"]
+texture = ExtResource("3_tex")
+offset = Vector2(0, -16)
+
+[node name="CollisionShape2D" parent="WanderArea" index="0"]
+shape = SubResource("CircleShape2D_wander")

@@ -98,10 +98,32 @@ func _update_hover() -> void:
 	if not tile_map: return
 	
 	var mouse_pos = get_global_mouse_position()
+	
+	# Priority 1: Check for interactable entities (NPCs)
+	var entity = _get_entity_under_mouse(mouse_pos)
+	if entity:
+		if entity != hovered_object:
+			if hovered_object and hovered_object.has_method("on_hover_exit"):
+				hovered_object.on_hover_exit()
+			hovered_object = entity
+			hovered_tile = Vector2i(-999, -999) # Invalid tile
+			if hovered_object.has_method("on_hover_enter"):
+				hovered_object.on_hover_enter()
+			queue_redraw()
+		
+		# Update center for drawing highlight
+		current_tile_center = entity.global_position
+		
+		# Redraw if needed (e.g. range changes)
+		if hovered_object:
+			queue_redraw()
+		return
+		
+	# Priority 2: Check Tiles
 	var tile_coords = tile_map.local_to_map(mouse_pos)
 	current_tile_center = tile_map.map_to_local(tile_coords)
 	
-	if tile_coords != hovered_tile:
+	if tile_coords != hovered_tile or (hovered_object and not hovered_object is Node2D): # Force update if switching from entity
 		if hovered_object and hovered_object.has_method("on_hover_exit"):
 			hovered_object.on_hover_exit()
 			
@@ -121,6 +143,21 @@ func _update_hover() -> void:
 	# Always redraw if hovering to update dynamic range color
 	if hovered_object:
 		queue_redraw()
+
+func _get_entity_under_mouse(pos: Vector2) -> Node2D:
+	var space_state = get_world_2d().direct_space_state
+	var query = PhysicsPointQueryParameters2D.new()
+	query.position = pos
+	query.collide_with_areas = true # Check areas (NPCs might be Area2D or have one)
+	query.collide_with_bodies = true
+	query.collision_mask = 1 | 2 | 4 # Check standard layers (adjust if needed)
+	
+	var results = space_state.intersect_point(query)
+	for result in results:
+		var collider = result.collider
+		if collider.has_method("interact") and not collider.has_method("harvest"): # Distinguish from plants if needed
+			return collider
+	return null
 
 func _is_in_range(target: Node2D) -> bool:
 	if not is_instance_valid(target) or not interact_area: return false
@@ -270,11 +307,15 @@ func _draw_interaction_highlight() -> void:
 		if in_range and hovered_object.is_harvest_ready():
 			col = interact_ready_color
 	else:
-		# Building
+		# Building / Entity
 		if in_range:
 			col = interact_building_color
 			
-	_draw_tile_outline(current_tile_center, col)
+	if hovered_object.is_in_group("interactable"):
+		draw_circle(to_local(current_tile_center), 20.0, col)
+		draw_circle(to_local(current_tile_center), 22.0, col, false, 2.0)
+	else:
+		_draw_tile_outline(current_tile_center, col)
 
 func _draw_tile_outline(center: Vector2, color: Color) -> void:
 	var half = tile_size / 2.0

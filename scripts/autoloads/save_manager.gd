@@ -127,6 +127,7 @@ func save_game(world_id: String) -> bool:
 		"inventory": Inventory.to_save_data(),
 		"planting": {}, # Will be filled if PlantingSystem is found
 		"tips": TipsManager.to_save_data(),
+		"story_flags": GameState.story_flags,
 		"player": {},
 		"ui_state": {}
 	}
@@ -203,6 +204,12 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Apply Tips
 	if data.has("tips"):
 		TipsManager.from_save_data(data["tips"])
+
+	# Apply Story Flags
+	if data.has("story_flags"):
+		GameState.story_flags = data["story_flags"]
+	else:
+		GameState.story_flags = {}
 
 	# Apply UI state
 	if data.has("ui_state") and data["ui_state"].has("build_menu_collapsed"):

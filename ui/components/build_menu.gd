@@ -26,6 +26,7 @@ var _category_states: Dictionary = {}
 func _ready() -> void:
 	# Initial position (off-screen left)
 	panel.position.x = -PANEL_WIDTH
+	add_to_group("build_menu")
 	
 	_populate_items()
 	
@@ -47,6 +48,11 @@ func _input(event: InputEvent) -> void:
 		return # Don't toggle if typing
 
 	if DialogueManager and DialogueManager.is_active(): return
+	
+	# Block if Rat Manager is open
+	var rat_manager = get_tree().get_first_node_in_group("rat_manager_panel")
+	if rat_manager and rat_manager.visible: return
+	
 	if event.is_action_pressed("toggle_build_menu"):
 		toggle()
 

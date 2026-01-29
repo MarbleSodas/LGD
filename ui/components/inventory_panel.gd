@@ -124,8 +124,8 @@ func _on_held_item_changed(item: InventoryItem, count: int) -> void:
 		cursor_preview.visible = true
 		cursor_preview.global_position = get_global_mouse_position() - (cursor_preview.size / 2.0)
 		
-		# Block mouse clicks to the world while holding an item
-		mouse_filter = MouseFilter.MOUSE_FILTER_STOP
+		# Allow clicking container slots (which are in front) but catch clicks outside (behind)
+		mouse_filter = MouseFilter.MOUSE_FILTER_PASS
 	else:
 		cursor_preview.visible = false
 		# Let mouse clicks pass through to the world when not holding anything

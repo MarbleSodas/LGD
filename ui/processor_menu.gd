@@ -118,6 +118,7 @@ func _setup_slots() -> void:
 		var slot = InventorySlotScene.instantiate()
 		slot.slot_index = 0
 		slot.target_inventory = output_inventory
+		slot.enable_insertion = false
 		output_slot_container.add_child(slot)
 
 func _refresh_recipe_list() -> void:

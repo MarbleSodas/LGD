@@ -3,6 +3,7 @@ extends NinePatchRect
 signal slot_hovered(index: int)
 
 @export var slot_index: int = 0
+@export var enable_insertion: bool = true
 
 ## Optional target inventory (for containers). If null, uses player Inventory.
 var target_inventory: Object = null
@@ -123,7 +124,8 @@ func _handle_left_click() -> void:
 		if not holding and shift:
 			_handle_external_shift_transfer()
 		elif holding:
-			_handle_external_place()
+			if enable_insertion:
+				_handle_external_place()
 		else:
 			_handle_external_pickup()
 
@@ -142,7 +144,8 @@ func _handle_right_click() -> void:
 	else:
 		# External Inventory
 		if holding:
-			_handle_external_place_one()
+			if enable_insertion:
+				_handle_external_place_one()
 		else:
 			if shift:
 				_handle_external_pickup_half()

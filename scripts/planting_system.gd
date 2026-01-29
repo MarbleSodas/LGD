@@ -126,6 +126,10 @@ func _input(event: InputEvent) -> void:
 	if DialogueManager and DialogueManager.is_active():
 		return
 
+	# Block if Rat Manager is open
+	var rat_manager = get_tree().get_first_node_in_group("rat_manager_panel")
+	if rat_manager and rat_manager.visible: return
+
 	# Global Toggle: Delete Mode (F)
 	if event.is_action_pressed("toggle_delete_mode"):
 		if current_mode == Mode.DELETE:
@@ -290,9 +294,6 @@ func from_save_data(data: Dictionary) -> void:
 		var item: BuildableItem = BuildRegistry.get_item(id)
 		if not item or not item.scene: continue
 		
-		# Visuals
-		tile_map.set_cell(coords, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
-		
 		# Spawn
 		var instance: Node2D = item.scene.instantiate() as Node2D
 		var pos: Vector2 = tile_map.map_to_local(coords)
@@ -303,6 +304,15 @@ func from_save_data(data: Dictionary) -> void:
 			
 		instance.global_position = pos + offset
 		instance.set_meta("buildable_id", id)
+		
+		# Set placement data (Crucial for multi-tile objects like StoneDeposit)
+		if instance.has_method("set_placement_data"):
+			instance.set_placement_data(coords, false)
+		
+		# Visuals - clear full footprint
+		var offsets = _get_footprint_offsets(item)
+		for off in offsets:
+			tile_map.set_cell(coords + off, GRASS_CLEAR_SOURCE_ID, Vector2i.ZERO)
 		
 		ysort_root.add_child(instance)
 		

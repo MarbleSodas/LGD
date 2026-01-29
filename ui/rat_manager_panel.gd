@@ -20,6 +20,7 @@ var _tween: Tween
 
 func _ready() -> void:
 	visible = false
+	add_to_group("rat_manager_panel")
 	# Initialize off-screen
 	var height = panel.size.y
 	panel.offset_top = CLOSED_OFFSET_Y
@@ -39,6 +40,15 @@ func _process(_delta: float) -> void:
 		current_house.update_hover(coords)
 
 func open(house: MushroomHouse) -> void:
+	# Close build menu if open
+	var build_menu = get_tree().get_first_node_in_group("build_menu")
+	if build_menu and build_menu.has_method("close"):
+		build_menu.close()
+		
+	# Disable planting/deletion modes
+	if house.planting_system:
+		house.planting_system.set_mode(PlantingSystem.Mode.NONE)
+
 	current_house = house
 	visible = true
 	_update_ui()

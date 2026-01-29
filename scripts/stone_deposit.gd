@@ -44,6 +44,9 @@ func harvest() -> Dictionary:
 func set_placement_data(coords: Vector2i, _flip: bool) -> void:
 	tile_coords = coords
 
+func get_center_tile() -> Vector2i:
+	return tile_coords
+
 func get_occupied_tiles() -> Array[Vector2i]:
 	# Footprint size (3, 1) means centered at tile_coords with +/- 1 tile horizontally
 	# Logic matches PlacementManager/PlantingSystem centering:

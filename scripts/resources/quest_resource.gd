@@ -16,3 +16,23 @@ extends Resource
 ## Dictionary of rewards.
 ## Format: { "item_id": quantity }
 @export var rewards: Dictionary = {}
+
+@export var npc_id: String = ""
+@export var unlock_conditions: Array[QuestCondition] = []
+@export_enum("AND", "OR") var condition_operator: String = "AND"
+@export var reward_dialogue_id: String = ""
+
+func are_conditions_met() -> bool:
+	if unlock_conditions.is_empty():
+		return true
+		
+	if condition_operator == "AND":
+		for condition in unlock_conditions:
+			if not condition.is_met():
+				return false
+		return true
+	else: # OR
+		for condition in unlock_conditions:
+			if condition.is_met():
+				return true
+		return false

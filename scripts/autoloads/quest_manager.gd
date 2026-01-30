@@ -2,7 +2,6 @@ extends Node
 
 signal quest_started(quest_id)
 signal quest_completed(quest_id)
-signal objective_updated(quest_id, objective_key, current_value)
 
 # Format: { quest_id: { "current_items": { "wood": 2 } } }
 var active_quests: Dictionary = {}

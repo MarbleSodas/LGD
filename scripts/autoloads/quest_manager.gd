@@ -147,9 +147,6 @@ func start_quest(quest_id: String) -> void:
 	# Backward compatibility: ensures quest is active
 	activate_quest(quest_id)
 
-func check_quest_progress(quest_id: String) -> void:
-	quest_updated.emit(quest_id)
-
 func _on_inventory_changed(_item, _slot, _count) -> void:
 	_check_conditions_for_unlocks()
 

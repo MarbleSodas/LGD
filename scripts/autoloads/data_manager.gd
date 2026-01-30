@@ -6,6 +6,7 @@ extends Node
 # --- GameState Signals ---
 signal world_loaded(world_id: String)
 signal world_unloaded()
+signal flag_changed(flag_name: String, value: bool)
 
 # --- TipsManager Signals ---
 signal tip_state_changed(tip_id: String, is_seen: bool)
@@ -39,7 +40,9 @@ func clear_current_world() -> void:
 	world_unloaded.emit()
 
 func set_flag(flag_name: String, value: bool = true) -> void:
-	story_flags[flag_name] = value
+	if story_flags.get(flag_name) != value:
+		story_flags[flag_name] = value
+		flag_changed.emit(flag_name, value)
 
 func get_flag(flag_name: String) -> bool:
 	return story_flags.get(flag_name, false)

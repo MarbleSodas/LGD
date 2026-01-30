@@ -8,7 +8,7 @@ func enter() -> void:
 	var target = npc.get_wander_target()
 	npc.nav_agent.target_position = target
 
-func physics_update(delta: float) -> void:
+func physics_update(_delta: float) -> void:
 	var npc = entity as NPCBase
 	if not npc: return
 	

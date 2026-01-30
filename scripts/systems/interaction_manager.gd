@@ -312,6 +312,10 @@ func _draw_interaction_highlight() -> void:
 			col = interact_building_color
 			
 	if hovered_object.is_in_group("interactable"):
+		# Skip highlight for NPCs that have their own interact prompt
+		if hovered_object is NPCBase:
+			return
+
 		draw_circle(to_local(current_tile_center), 20.0, col)
 		draw_circle(to_local(current_tile_center), 22.0, col, false, 2.0)
 	else:

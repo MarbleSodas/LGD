@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://ca0t3y1tapahi"]
 
-[ext_resource type="Script" uid="uid://bc8pidjrla2v6" path="res://scenes/entities/buildables/buildings/processor_building.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://crsg2gpur5sw0" path="res://scenes/entities/buildables/buildings/processor_building.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://b3yb832dl0tgk" path="res://assets/objects/buildings/processor/Processor_Base.png" id="2_o5tk0"]
 [ext_resource type="Texture2D" uid="uid://bjytnvtrmp2q5" path="res://assets/objects/buildings/processor/Processor_Arms.png" id="3_rxehl"]
 [ext_resource type="Texture2D" uid="uid://iag1scug81mm" path="res://assets/objects/buildings/processor/Processor_Stone.png" id="5_37trh"]

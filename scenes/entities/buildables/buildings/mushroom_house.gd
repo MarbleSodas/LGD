@@ -18,7 +18,7 @@ const GROUP_MUSHROOM_HOUSES: String = "mushroom_houses"
 const GROUP_UI_LAYER: String = "ui_layer"
 const GROUP_PLANTING_SYSTEM: String = "planting_system"
 
-@export var rat_scene: PackedScene = preload("res://scenes/rat_assistant.tscn")
+@export var rat_scene: PackedScene = preload("res://scenes/entities/npcs/rat_assistant.tscn")
 
 # -- Dependencies --
 var planting_system: PlantingSystem

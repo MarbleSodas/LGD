@@ -11,3 +11,4 @@ input_count = 1
 output_item = ExtResource("3_output")
 output_count = 1
 processing_time = 3.0
+is_locked = true

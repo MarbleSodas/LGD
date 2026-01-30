@@ -1,0 +1,46 @@
+[gd_scene load_steps=8 format=3 uid="uid://c1v8n4x3j5k6m"]
+
+[ext_resource type="Script" uid="uid://cwq4wei2lra7n" path="res://ui/components/action_button.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://dqtcmyslgqxwj" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://coiace7q6enwf" path="res://assets/sproutlands/Sprite sheets/buttons/Square Buttons 26x26.png" id="2_tg7h8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b8436"]
+atlas = ExtResource("2_tg7h8")
+region = Rect2(8, 56, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
+texture = SubResource("AtlasTexture_b8436")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oqrpr"]
+atlas = ExtResource("2_tg7h8")
+region = Rect2(56, 56, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pressed"]
+texture = SubResource("AtlasTexture_oqrpr")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(0, 0, 32, 32)
+modulate_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="ActionButton" type="Button"]
+custom_minimum_size = Vector2(80, 32)
+offset_right = 80.0
+offset_bottom = 32.0
+theme_override_colors/font_color = Color(0.3, 0.2, 0.1, 1)
+theme_override_colors/font_pressed_color = Color(0.2, 0.1, 0.05, 1)
+theme_override_colors/font_hover_color = Color(0.4, 0.3, 0.2, 1)
+theme_override_constants/h_separation = 8
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_pressed")
+text = "Action"
+expand_icon = true
+script = ExtResource("1_script")

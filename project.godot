@@ -25,6 +25,7 @@ ItemRegistry="*res://scripts/autoloads/registries.gd"
 GameState="*res://scripts/autoloads/data_manager.gd"
 SaveManager="*res://scripts/autoloads/save_manager.gd"
 DialogueManager="*res://scripts/autoloads/dialogue_manager.gd"
+QuestManager="*res://scripts/autoloads/quest_manager.gd"
 TipsManager="*res://scripts/autoloads/data_manager.gd"
 GameServices="*res://scripts/autoloads/game_services.gd"
 

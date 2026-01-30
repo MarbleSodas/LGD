@@ -43,11 +43,16 @@ func _add_starting_items() -> void:
 	# Only add starting items if inventory is completely empty
 	# This prevents duplicates if _ready is called multiple times or after load
 	if not is_empty(): return
+	
+	# Only add starting items if specifically requested or for debugging
+	# For the main game loop, we want the player to start empty-handed
+	# and receive their first item from Glider
+	pass
 
-	if ItemRegistry:
-		var tuft: InventoryItem = ItemRegistry.get_item("dandelion_tuft")
-		if tuft:
-			add_item(tuft, 5)
+	# if ItemRegistry:
+	# 	var tuft: InventoryItem = ItemRegistry.get_item("dandelion_tuft")
+	# 	if tuft:
+	# 		add_item(tuft, 5)
 
 ## Initialize all slots as empty
 func _init_slots() -> void:

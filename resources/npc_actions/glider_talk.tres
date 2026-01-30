@@ -1,10 +1,8 @@
-[gd_resource type="Resource" script_class="NPCAction" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="NPCAction" load_steps=2 format=3 uid="uid://c8jrqilli36ir"]
 
-[ext_resource type="Script" path="res://scripts/resources/npc_action.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cs56a3mjthr78" path="res://scripts/resources/npc_action.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
 action_id = "talk"
 display_name = "Talk"
-requires_flag = ""
-disabled_if_flag = ""

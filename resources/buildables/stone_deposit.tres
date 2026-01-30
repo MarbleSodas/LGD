@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bnh47xbf82wtb" path="res://assets/objects/buildings/StoneDeposit.png" id="2_icon"]
-[ext_resource type="PackedScene" uid="uid://bf11eo3e4pr0h" path="res://scenes/entities/buildables/resources/stone_deposit.tscn" id="3_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/buildables/resources/stone_deposit.tscn" id="3_scene"]
 
 [resource]
 script = ExtResource("1_script")

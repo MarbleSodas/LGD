@@ -23,13 +23,37 @@ var _buildable_items: Dictionary = {}
 # --- BuildRegistry State ---
 var _unlocked_ids: Array[String] = []
 var _hotbar: Dictionary = {}
-var active_buildable: BuildableItem = null : set = _set_active_buildable
+var active_buildable: BuildableItem = null : 
+	set(val):
+		if active_buildable != val:
+			active_buildable = val
+			active_buildable_changed.emit(active_buildable)
+
+# Unlock rules: Key = Inventory Item ID, Value = List of Buildable IDs to unlock
+var _unlock_rules: Dictionary = {
+	"shroom": ["mushroom_plant", "mushroom_house"],
+	"acorn": ["tree"],
+	"wood": ["barrel", "processor"]
+}
+
+# Preferred hotbar slots for auto-assignment
+var _preferred_hotbar_slots: Dictionary = {
+	"dandelion": 0,
+	"mushroom_plant": 1,
+	"tree": 2,
+	"mushroom_house": 3,
+	"barrel": 4,
+	"processor": 5
+}
 
 func _ready() -> void:
 	_load_inventory_items()
 	_init_hotbar()
 	_load_buildables()
 	_unlock_default_items()
+	
+	# Connect to inventory to handle dynamic unlocks
+	call_deferred("_connect_inventory_signals")
 
 # ------------------------------------------------------------------------------
 # Inventory Item Logic (formerly ItemRegistry)
@@ -81,12 +105,16 @@ func _init_hotbar() -> void:
 
 func _unlock_default_items() -> void:
 	# Default starting state
-	var defaults = ["dandelion", "barrel", "mushroom_house", "tree", "mushroom_plant", "processor"]
+	var defaults = ["dandelion"] # ONLY dandelion initially
 	for i in range(defaults.size()):
 		var id = defaults[i]
 		if _buildable_items.has(id):
 			unlock_item(id)
-			assign_to_hotbar(i, _buildable_items[id])
+			# Dandelion is 0 in preferred slots, but let's ensure it maps correctly
+			if _preferred_hotbar_slots.has(id):
+				assign_to_hotbar(_preferred_hotbar_slots[id], _buildable_items[id])
+			else:
+				assign_to_hotbar(i, _buildable_items[id])
 
 func get_unlocked_items() -> Array[BuildableItem]:
 	var items: Array[BuildableItem] = []
@@ -106,6 +134,13 @@ func unlock_item(id: String) -> void:
 	if not id in _unlocked_ids:
 		_unlocked_ids.append(id)
 		buildable_unlocked.emit(_buildable_items[id])
+		
+		# Auto-assign to preferred hotbar slot if available
+		if _preferred_hotbar_slots.has(id):
+			var slot = _preferred_hotbar_slots[id]
+			# Only assign if the slot is empty or we want to force it?
+			# Usually we want to force it to the "correct" slot for this game logic
+			assign_to_hotbar(slot, _buildable_items[id])
 
 func assign_to_hotbar(slot: int, item: BuildableItem) -> void:
 	if slot < 0 or slot >= HOTBAR_SIZE:
@@ -158,3 +193,39 @@ func _set_active_buildable(val: BuildableItem) -> void:
 	if active_buildable != val:
 		active_buildable = val
 		active_buildable_changed.emit(active_buildable)
+
+# ------------------------------------------------------------------------------
+# Unlock Logic
+# ------------------------------------------------------------------------------
+
+func _connect_inventory_signals() -> void:
+	# Inventory autoload should be available now
+	# We use get_node("/root/Inventory") or just the global Inventory if valid
+	# Since autoloads are children of root, Inventory should be accessible.
+	# Note: In GDScript, the global variable 'Inventory' is auto-generated.
+	
+	if Inventory:
+		if not Inventory.item_added.is_connected(_on_inventory_item_added):
+			Inventory.item_added.connect(_on_inventory_item_added)
+			
+		# Check initial state
+		_check_all_unlocks()
+
+func _on_inventory_item_added(item: InventoryItem, _slot: int, _count: int) -> void:
+	if item:
+		_check_unlocks_for_item(item.id)
+
+func _check_unlocks_for_item(item_id: String) -> void:
+	if _unlock_rules.has(item_id):
+		var to_unlock = _unlock_rules[item_id]
+		for buildable_id in to_unlock:
+			if not is_unlocked(buildable_id):
+				unlock_item(buildable_id)
+
+func _check_all_unlocks() -> void:
+	if not Inventory: return
+	
+	# Check for existing items in inventory that trigger unlocks
+	for item_id in _unlock_rules:
+		if Inventory.has_item(item_id):
+			_check_unlocks_for_item(item_id)

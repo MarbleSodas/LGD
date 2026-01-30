@@ -17,7 +17,7 @@ const SCENE_START_MENU: String = "res://scenes/start_menu/start_menu.tscn"
 	Vector2i(23, 6),
 	Vector2i(-3, 25),
 	Vector2i(24, 56),
-	Vector2i(8, 2)
+	Vector2i(5, 7)
 ]:
 	set(value):
 		starter_trees = value

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://et1spe8kco4n" path="res://scripts/resources/buildable_item.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://b4o0h1vqvol02" path="res://assets/objects/buildings/Barrel.png" id="2_icon"]
-[ext_resource type="PackedScene" uid="uid://023pbxtnavgs" path="res://scenes/entities/buildables/resources/barrel.tscn" id="3_scene"]
+[ext_resource type="PackedScene" path="res://scenes/entities/buildables/resources/barrel.tscn" id="3_scene"]
 
 [resource]
 script = ExtResource("1_script")

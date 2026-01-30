@@ -7,6 +7,7 @@ signal line_started(index: int)
 var is_dialogue_active: bool = false
 var dialogue_box: Control
 var shown_dialogues: Dictionary = {}
+var current_resource: DialogueResource
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -27,15 +28,26 @@ func start_dialogue(resource: DialogueResource) -> void:
 		return
 		
 	is_dialogue_active = true
-	shown_dialogues[resource.dialogue_id] = true
+	current_resource = resource
+	if resource.dialogue_id != "":
+		shown_dialogues[resource.dialogue_id] = true
 	emit_signal("dialogue_started")
 	
 	dialogue_box.open(resource)
+
+func start_custom(speaker: String, portrait: Texture2D) -> void:
+	if is_dialogue_active: return
+	if not dialogue_box: return
+	
+	is_dialogue_active = true
+	emit_signal("dialogue_started")
+	dialogue_box.open_custom(speaker, portrait)
 
 func close_dialogue() -> void:
 	if not is_dialogue_active: return
 	
 	is_dialogue_active = false
+	current_resource = null
 	dialogue_box.close()
 	emit_signal("dialogue_finished")
 
@@ -53,6 +65,15 @@ func _on_dialogue_box_completed() -> void:
 
 func _on_line_started(index: int) -> void:
 	emit_signal("line_started", index)
+	
+	if current_resource and index >= 0 and index < current_resource.entries.size():
+		var entry = current_resource.entries[index]
+		if entry.quest_to_start != "":
+			if QuestManager:
+				QuestManager.start_quest(entry.quest_to_start)
+		if entry.quest_to_complete != "":
+			if QuestManager:
+				QuestManager.complete_quest(entry.quest_to_complete)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_dialogue_active: return

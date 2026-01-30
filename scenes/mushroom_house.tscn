@@ -1,6 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://tes74vjago1a"]
+[gd_scene load_steps=4 format=3 uid="uid://cvk46v652oy72"]
 
-[ext_resource type="Script" uid="uid://cl5s564dwhjax" path="res://scenes/entities/buildables/buildings/mushroom_house.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/mushroom_house.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dt4rqaqv867ay" path="res://assets/objects/buildings/MushroomHome.png" id="2_texture"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house"]

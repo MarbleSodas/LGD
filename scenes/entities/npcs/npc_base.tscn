@@ -1,0 +1,51 @@
+[gd_scene load_steps=8 format=3 uid="uid://dnknegv62q817"]
+
+[ext_resource type="Script" uid="uid://lgbg0km34e88" path="res://scripts/npc/npc_base.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://btv7456g47lm" path="res://scripts/components/StateMachine.gd" id="2_fsm"]
+[ext_resource type="Script" uid="uid://cn3wecwgfokyl" path="res://scripts/npc/states/npc_idle_state.gd" id="3_idle"]
+[ext_resource type="Script" uid="uid://dv7y5pbx8ski6" path="res://scripts/npc/states/npc_wander_state.gd" id="4_wander"]
+[ext_resource type="Script" uid="uid://dskpybnemfwbr" path="res://scripts/npc/states/npc_talk_state.gd" id="5_talk"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_gbdck"]
+radius = 24.0
+height = 78.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_gbdck"]
+radius = 21.023796
+
+[node name="NPCBase" type="CharacterBody2D" groups=["interactable"]]
+collision_layer = 2
+motion_mode = 1
+wall_min_slide_angle = 0.0
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_gbdck")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+path_desired_distance = 10.0
+avoidance_enabled = true
+radius = 16.0
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("2_fsm")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("3_idle")
+
+[node name="Wander" type="Node" parent="StateMachine"]
+script = ExtResource("4_wander")
+
+[node name="Talk" type="Node" parent="StateMachine"]
+script = ExtResource("5_talk")
+
+[node name="WanderArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WanderArea"]
+shape = SubResource("CircleShape2D_gbdck")

@@ -9,6 +9,10 @@ signal interaction_ended
 @export var intro_dialogue: DialogueResource
 @export var greeting_dialogue: DialogueResource # Optional short greeting for repeat interactions
 @export var actions: Array[Resource] = [] # NPCAction resources
+@export var action_menu_prompt: String = "What would you like to do?"
+
+var interact_prompt_scene = preload("res://ui/components/interact_prompt.tscn")
+var interact_prompt: Control = null
 
 @onready var state_machine: StateMachine = $StateMachine
 @onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
@@ -17,6 +21,9 @@ signal interaction_ended
 
 var home_position: Vector2
 var is_interacting: bool = false
+var is_hovered: bool = false
+var _is_showing_actions: bool = false
+var _is_switching_dialogue: bool = false
 
 func _ready() -> void:
 	home_position = global_position
@@ -26,11 +33,29 @@ func _ready() -> void:
 	nav_agent.target_desired_distance = 10.0
 	nav_agent.avoidance_enabled = true
 	
-	# Connect to DialogueBox signals globally via Manager if possible, 
-	# but usually we connect dynamically when interaction starts.
+	# Setup Interact Prompt
+	interact_prompt = interact_prompt_scene.instantiate()
+	add_child(interact_prompt)
+	interact_prompt.position = Vector2(0, 24) # Position below the NPC
+	interact_prompt.visible = false
+	# Ensure it renders on top
+	interact_prompt.z_index = 10
+
+func on_hover_enter() -> void:
+	is_hovered = true
+	if interact_prompt and not is_interacting:
+		interact_prompt.show_prompt()
+
+func on_hover_exit() -> void:
+	is_hovered = false
+	if interact_prompt:
+		interact_prompt.hide_prompt()
 
 func interact() -> void:
 	if is_interacting: return
+	
+	if interact_prompt:
+		interact_prompt.hide_prompt()
 	
 	is_interacting = true
 	state_machine._on_transition_requested(state_machine.current_state, "talk")
@@ -46,14 +71,24 @@ func interact() -> void:
 		use_intro = false
 	
 	if use_intro and intro_dialogue:
-		DialogueManager.start_dialogue(intro_dialogue)
-		DialogueManager.dialogue_finished.connect(_on_dialogue_finished, CONNECT_ONE_SHOT)
+		_start_dialogue(intro_dialogue)
 	elif greeting_dialogue:
-		DialogueManager.start_dialogue(greeting_dialogue)
-		DialogueManager.dialogue_finished.connect(_on_dialogue_finished, CONNECT_ONE_SHOT)
+		_start_dialogue(greeting_dialogue)
 	else:
-		# Direct menu
 		_open_actions_menu()
+
+func _start_dialogue(dialogue: DialogueResource) -> void:
+	if not DialogueManager.dialogue_finished.is_connected(_on_dialogue_finished):
+		DialogueManager.dialogue_finished.connect(_on_dialogue_finished)
+	
+	_is_showing_actions = false
+	
+	if DialogueManager.is_active():
+		_is_switching_dialogue = true
+		DialogueManager.close_dialogue()
+		_is_switching_dialogue = false
+		
+	DialogueManager.start_dialogue(dialogue)
 
 func _face_target(target_pos: Vector2) -> void:
 	if target_pos.x < global_position.x:
@@ -62,39 +97,39 @@ func _face_target(target_pos: Vector2) -> void:
 		sprite.flip_h = false
 
 func _on_dialogue_finished() -> void:
-	# Dialogue ended, now show actions if any
-	if actions.is_empty():
+	if not is_interacting or _is_switching_dialogue: return
+	
+	if _is_showing_actions:
+		# If we were showing actions and the dialogue box closed, we are done
 		_end_interaction()
-	else:
-		_show_actions_in_box()
+		return
+
+	# Dialogue ended, always end interaction unless specific logic dictates otherwise
+	# (User requested to exit instead of returning to action menu)
+	_end_interaction()
 
 func _show_actions_in_box() -> void:
 	if DialogueManager.dialogue_box:
-		DialogueManager.dialogue_box.show_actions(actions)
+		DialogueManager.dialogue_box.show_actions(actions, action_menu_prompt)
 		
 		# We need to listen for selection OR close
 		if not DialogueManager.dialogue_box.action_selected.is_connected(_on_action_selected):
 			DialogueManager.dialogue_box.action_selected.connect(_on_action_selected, CONNECT_ONE_SHOT)
-			
-		# Also watch for box closing without selection (e.g. ESC)
-		# But DialogueBox typically closes on ESC. We need to catch that to end interaction.
-		# For now, let's assume action selection handles it or DialogueManager.dialogue_finished handles closure.
-		# Wait, dialogue_finished only emits when box closes completely.
-		# If show_actions keeps box open, we are fine.
-		pass
 
 func _open_actions_menu() -> void:
-	if DialogueManager.dialogue_box:
-		# We need a way to open box without text, or with static text.
-		# For now, let's assume we pass a dummy resource or method.
-		# Let's add open_for_actions to DialogueBox later.
-		# Calling generic open_custom or similar.
+	_is_showing_actions = true
+	if not DialogueManager.dialogue_finished.is_connected(_on_dialogue_finished):
+		DialogueManager.dialogue_finished.connect(_on_dialogue_finished)
 		
-		# Reusing intro resource for portrait/name but suppressing lines?
-		# Let's try to just open the box visually.
+	if DialogueManager.dialogue_box:
+		var s_name = "???"
+		var s_portrait = null
 		if intro_dialogue:
-			DialogueManager.dialogue_box.open_custom(intro_dialogue.speaker_name, intro_dialogue.portrait)
-			_show_actions_in_box()
+			s_name = intro_dialogue.speaker_name
+			s_portrait = intro_dialogue.portrait
+			
+		DialogueManager.start_custom(s_name, s_portrait)
+		_show_actions_in_box()
 
 func _on_action_selected(action_id: String) -> void:
 	handle_action(action_id)
@@ -111,14 +146,21 @@ func handle_action(action_id: String) -> void:
 		pass
 
 func _close_menu() -> void:
-	if DialogueManager.dialogue_box:
-		DialogueManager.dialogue_box.close()
-	_end_interaction()
+	if DialogueManager.is_active():
+		DialogueManager.close_dialogue()
+	else:
+		_end_interaction()
 
 func _end_interaction() -> void:
 	is_interacting = false
+	_is_showing_actions = false
+	if DialogueManager.dialogue_finished.is_connected(_on_dialogue_finished):
+		DialogueManager.dialogue_finished.disconnect(_on_dialogue_finished)
 	interaction_ended.emit()
 	state_machine._on_transition_requested(state_machine.current_state, "idle")
+	
+	if is_hovered and interact_prompt:
+		interact_prompt.show_prompt()
 
 func get_wander_target() -> Vector2:
 	# Random point in circle

@@ -1,11 +1,37 @@
-[gd_resource type="Resource" script_class="DialogueResource" load_steps=3 format=3 uid="uid://b835syoac05yq"]
+[gd_resource type="Resource" script_class="DialogueResource" load_steps=9 format=3 uid="uid://b835syoac05yq"]
 
 [ext_resource type="Script" uid="uid://d10y68jdlor51" path="res://scripts/resources/dialogue_resource.gd" id="1"]
+[ext_resource type="Script" uid="uid://chjekfnu2fuhc" path="res://scripts/resources/dialogue_entry.gd" id="1_bhf4s"]
 [ext_resource type="Texture2D" uid="uid://r3ay0mo3mlxs" path="res://resources/ui/player_portrait.tres" id="2"]
+
+[sub_resource type="Resource" id="Resource_rke5k"]
+script = ExtResource("1_bhf4s")
+text = "..."
+metadata/_custom_type_script = "uid://chjekfnu2fuhc"
+
+[sub_resource type="Resource" id="Resource_q53gu"]
+script = ExtResource("1_bhf4s")
+text = "Where... am I?"
+metadata/_custom_type_script = "uid://chjekfnu2fuhc"
+
+[sub_resource type="Resource" id="Resource_3jfyn"]
+script = ExtResource("1_bhf4s")
+text = "I was just taking a nap, where... is this?"
+metadata/_custom_type_script = "uid://chjekfnu2fuhc"
+
+[sub_resource type="Resource" id="Resource_stxwe"]
+script = ExtResource("1_bhf4s")
+text = "..."
+metadata/_custom_type_script = "uid://chjekfnu2fuhc"
+
+[sub_resource type="Resource" id="Resource_jgsef"]
+script = ExtResource("1_bhf4s")
+text = "Dad always tells me to stay calm and gather some information first. Maybe I can get some information from the Squirrel?"
+metadata/_custom_type_script = "uid://chjekfnu2fuhc"
 
 [resource]
 script = ExtResource("1")
 dialogue_id = "intro_awakening"
 speaker_name = "???"
 portrait = ExtResource("2")
-lines = Array[String](["...", "Where... am I?", "I should look around."])
+entries = Array[ExtResource("1_bhf4s")]([SubResource("Resource_rke5k"), SubResource("Resource_q53gu"), SubResource("Resource_3jfyn"), SubResource("Resource_stxwe"), SubResource("Resource_jgsef")])

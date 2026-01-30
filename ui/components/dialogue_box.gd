@@ -11,6 +11,8 @@ signal action_selected(action_id: String)
 @onready var continue_indicator = %ContinueIndicator
 @onready var action_buttons_container = %ActionButtons
 
+const ACTION_BUTTON_SCENE = preload("res://ui/components/action_button.tscn")
+
 @onready var overlay = $Overlay
 @onready var dialogue_panel = $DialoguePanel
 @onready var background = $DialoguePanel/Background
@@ -24,6 +26,7 @@ var is_typing: bool = false
 var is_open: bool = false
 
 var _type_tween: Tween
+var _close_tween: Tween
 var default_portrait: Texture2D
 
 func _ready() -> void:
@@ -39,7 +42,7 @@ func _ready() -> void:
 	
 	_play_indicator_anim()
 
-func show_actions(actions: Array) -> void:
+func show_actions(actions: Array, prompt_text: String = "") -> void:
 	# Clean up previous buttons
 	for child in action_buttons_container.get_children():
 		child.queue_free()
@@ -50,6 +53,17 @@ func show_actions(actions: Array) -> void:
 		
 	action_buttons_container.visible = true
 	continue_indicator.visible = false # Hide indicator when actions are shown
+	
+	# Display prompt text if provided
+	if prompt_text != "":
+		dialogue_label.text = prompt_text
+		dialogue_label.visible_characters = -1
+	
+	# Ensure the whole box is visible and active if showing actions
+	visible = true
+	is_open = true
+	overlay.visible = true
+	dialogue_panel.modulate.a = 1.0
 	
 	for action in actions:
 		if action is NPCAction:
@@ -62,13 +76,10 @@ func show_actions(actions: Array) -> void:
 				if GameState.has_flag(action.disabled_if_flag):
 					continue
 			
-			var btn = Button.new()
+			var btn = ACTION_BUTTON_SCENE.instantiate()
 			btn.text = action.display_name
 			if action.icon:
 				btn.icon = action.icon
-			
-			# Simple styling
-			btn.add_theme_constant_override("h_separation", 8)
 			
 			btn.pressed.connect(func(): _on_action_pressed(action.action_id))
 			action_buttons_container.add_child(btn)
@@ -83,13 +94,17 @@ func _on_action_pressed(action_id: String) -> void:
 	# The controller (NPC) should decide whether to start new dialogue or close
 
 func open(dialogue: DialogueResource) -> void:
+	# Kill any pending close tween to prevent it from hiding us
+	if _close_tween and _close_tween.is_valid():
+		_close_tween.kill()
+	
 	current_dialogue = dialogue
 	current_line_index = 0
 	is_open = true
 	visible = true
 	overlay.visible = true
 	
-	# Setup UI
+	# Setup UI - set defaults
 	speaker_label.text = dialogue.speaker_name
 	
 	# Hide actions when starting new dialogue
@@ -115,40 +130,63 @@ func open(dialogue: DialogueResource) -> void:
 	tween.parallel().tween_property(dialogue_panel, "modulate:a", 1.0, 0.2)
 	tween.parallel().tween_property(dialogue_panel, "position:y", dialogue_panel.position.y - 20, 0.2)
 	
-	_show_current_line()
+	if current_dialogue.entries.size() > 0:
+		_show_current_entry()
+	else:
+		close()
 
 func close() -> void:
+	if not is_open: return  # Prevent double-close
 	is_open = false
-	var tween = create_tween()
-	tween.tween_property(dialogue_panel, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(func(): visible = false)
+	
+	# Kill any existing close tween to prevent stale callbacks
+	if _close_tween and _close_tween.is_valid():
+		_close_tween.kill()
+	
+	_close_tween = create_tween()
+	_close_tween.tween_property(dialogue_panel, "modulate:a", 0.0, 0.2)
+	_close_tween.tween_callback(func(): visible = false)
 
 func advance() -> void:
 	if not is_open: return
 	
 	if is_typing:
 		_skip_typing()
-	else:
+	elif current_dialogue:
 		current_line_index += 1
-		if current_line_index < current_dialogue.lines.size():
-			_show_current_line()
+		if current_line_index < current_dialogue.entries.size():
+			_show_current_entry()
 		else:
+			# DialogueManager handles close via dialogue_completed signal
 			emit_signal("dialogue_completed")
-			close()
+	else:
+		pass
 
-func _show_current_line() -> void:
+func _show_current_entry() -> void:
 	is_typing = true
 	continue_indicator.visible = false
 	
 	emit_signal("line_started", current_line_index)
 	
-	var text = current_dialogue.lines[current_line_index]
+	var entry: DialogueEntry = current_dialogue.entries[current_line_index]
+	var text = entry.text
 	
-	# Handle translation if keys exist
-	if current_dialogue.translation_keys.size() > current_line_index:
-		var key = current_dialogue.translation_keys[current_line_index]
-		if not key.is_empty():
-			text = tr(key)
+	# Handle overrides
+	if entry.speaker_override != "":
+		speaker_label.text = entry.speaker_override
+	else:
+		speaker_label.text = current_dialogue.speaker_name
+		
+	if entry.portrait_override:
+		portrait.texture = entry.portrait_override
+	elif current_dialogue.portrait:
+		portrait.texture = current_dialogue.portrait
+	else:
+		portrait.texture = default_portrait
+		
+	# Handle translation if key exists
+	if entry.translation_key != "":
+		text = tr(entry.translation_key)
 			
 	dialogue_label.text = text
 	var parsed_len = dialogue_label.get_parsed_text().length()
@@ -164,6 +202,13 @@ func _show_current_line() -> void:
 	_type_tween.tween_callback(_on_typing_finished)
 
 func open_custom(name_text: String, portrait_texture: Texture2D) -> void:
+	# Kill any pending close tween to prevent it from hiding us
+	if _close_tween and _close_tween.is_valid():
+		_close_tween.kill()
+	
+	# Clear stale dialogue state so advance() doesn't auto-close action menus
+	current_dialogue = null
+	current_line_index = 0
 	is_open = true
 	visible = true
 	overlay.visible = true

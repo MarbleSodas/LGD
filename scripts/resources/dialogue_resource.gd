@@ -7,15 +7,14 @@ extends Resource
 ## Unique ID for state tracking (e.g. "tutorial_intro", "npc_rat_greet")
 @export var dialogue_id: String = ""
 
-## Name displayed above the dialogue box
+## Default name displayed above the dialogue box.
+## Used if a DialogueEntry doesn't specify a speaker_override.
 @export var speaker_name: String = ""
 
-## Optional portrait of the speaker
+## Default portrait of the speaker.
+## Used if a DialogueEntry doesn't specify a portrait_override.
 @export var portrait: Texture2D
 
-## Sequential lines of text to display
-@export_multiline var lines: Array[String] = []
-
-## Optional translation keys corresponding to lines (for localization)
-## If empty, raw text from 'lines' is used.
-@export var translation_keys: Array[String] = []
+## Sequential entries of dialogue to display.
+## Each entry defines text, speaker override, portrait override, etc.
+@export var entries: Array[DialogueEntry] = []

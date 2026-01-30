@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BuildableItem" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BuildableItem" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/buildable_item.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/objects/buildings/processor/Processor_Full.png" id="2_icon"]

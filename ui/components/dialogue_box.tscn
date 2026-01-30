@@ -95,6 +95,7 @@ theme_override_constants/margin_bottom = 10
 [node name="PortraitFrame" type="TextureRect" parent="DialoguePanel/HBoxContainer/MarginContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
@@ -106,6 +107,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = SubResource("AtlasTexture_portrait")
 expand_mode = 1
 stretch_mode = 5
@@ -123,6 +125,7 @@ layout_mode = 2
 [node name="SpeakerLabel" type="Label" parent="DialoguePanel/HBoxContainer/Content/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme = ExtResource("5_theme")
 theme_override_colors/font_color = Color(0.4, 0.2, 0.1, 1)
 text = "Speaker Name"
@@ -131,6 +134,7 @@ text = "Speaker Name"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 theme = ExtResource("5_theme")
 theme_override_colors/default_color = Color(0, 0, 0, 1)
 bbcode_enabled = true
@@ -140,6 +144,7 @@ text = "This is some dialogue text that goes here."
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 10
 alignment = 1
 

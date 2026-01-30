@@ -33,6 +33,8 @@ func _ready() -> void:
 	# Connect signals
 	if Registries:
 		Registries.buildable_unlocked.connect(_on_buildable_unlocked)
+		if Registries.has_signal("registries_reset"):
+			Registries.registries_reset.connect(_on_registries_reset)
 	
 	if search_bar:
 		search_bar.text_changed.connect(_on_search_text_changed)
@@ -167,6 +169,9 @@ func _on_buildable_unlocked(item: BuildableItem) -> void:
 	_add_item_slot(item)
 	if search_bar:
 		_filter_items(search_bar.text)
+
+func _on_registries_reset() -> void:
+	_populate_items()
 
 func _on_search_text_changed(new_text: String) -> void:
 	_filter_items(new_text)

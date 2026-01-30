@@ -10,6 +10,7 @@ extends Node
 signal buildable_unlocked(item: BuildableItem)
 signal hotbar_changed(slot: int, item: BuildableItem)
 signal active_buildable_changed(item: BuildableItem)
+signal registries_reset
 
 # --- Constants ---
 const ITEMS_PATH = "res://resources/items/"
@@ -261,6 +262,8 @@ func reset() -> void:
 	# Notify listeners that things might have changed (e.g. hotbar)
 	for i in range(HOTBAR_SIZE):
 		hotbar_changed.emit(i, _hotbar[i])
+		
+	registries_reset.emit()
 
 func to_save_data() -> Dictionary:
 	var hotbar_data: Dictionary = {}

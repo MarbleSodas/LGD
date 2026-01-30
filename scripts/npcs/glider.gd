@@ -8,10 +8,19 @@ extends NPCBase
 @export var mushroom_house_scene: PackedScene = preload("res://scenes/entities/buildables/buildings/mushroom_house.tscn")
 
 @export var quest_resource: QuestResource = preload("res://resources/quests/build_base_quest.tres")
+@export var shroom_collector_quest: QuestResource = preload("res://resources/quests/quest_shroom_collector.tres")
 
 func _ready():
+	quest = shroom_collector_quest
 	super._ready()
 	QuestManager.quest_completed.connect(_on_quest_completed_signal)
+
+func _has_available_quest() -> bool:
+	if quest:
+		var state = QuestManager.get_quest_state(quest.id)
+		if state == QuestManager.QuestState.UNLOCKED or state == QuestManager.QuestState.ACTIVE:
+			return true
+	return not QuestManager.active_quests.is_empty()
 
 func handle_action(action_id: String) -> void:
 	if action_id == "talk":
@@ -19,16 +28,16 @@ func handle_action(action_id: String) -> void:
 		if _handle_quest_dialogue():
 			return
 
-		# If no quests active, show busy dialogue
-		if QuestManager.active_quests.is_empty() and busy_dialogue:
+		# If no quests active/available, show busy dialogue
+		if not _has_available_quest() and busy_dialogue:
 			_start_dialogue(busy_dialogue)
 			return
 
 		# For repeat interactions, prefer greeting if available, otherwise fallback to intro
 		if greeting_dialogue:
-			_start_dialogue(greeting_dialogue)
+			_start_dialogue(greeting_dialogue, true)
 		elif intro_dialogue:
-			_start_dialogue(intro_dialogue)
+			_start_dialogue(intro_dialogue, true)
 
 	else:
 		super.handle_action(action_id)
@@ -60,12 +69,12 @@ func interact() -> void:
 	if player:
 		_face_target(player.global_position)
 	
-	if QuestManager.active_quests.is_empty():
+	if not _has_available_quest():
 		# No active quests -> Busy dialogue
 		if busy_dialogue:
 			_start_dialogue(busy_dialogue)
 		elif greeting_dialogue:
-			_start_dialogue(greeting_dialogue)
+			_start_dialogue(greeting_dialogue, true)
 		else:
 			_open_actions_menu()
 	else:
@@ -74,7 +83,7 @@ func interact() -> void:
 			return
 			
 		if greeting_dialogue:
-			_start_dialogue(greeting_dialogue)
+			_start_dialogue(greeting_dialogue, true)
 		else:
 			_open_actions_menu()
 

@@ -25,6 +25,7 @@ var is_interacting: bool = false
 var is_hovered: bool = false
 var _is_showing_actions: bool = false
 var _is_switching_dialogue: bool = false
+var _show_menu_after_dialogue: bool = false
 var _quest_panel: Control = null
 
 func _ready() -> void:
@@ -75,7 +76,7 @@ func interact() -> void:
 	if use_intro and intro_dialogue:
 		_start_dialogue(intro_dialogue)
 	elif greeting_dialogue:
-		_start_dialogue(greeting_dialogue)
+		_start_dialogue(greeting_dialogue, true)
 	else:
 		_open_actions_menu()
 
@@ -95,11 +96,12 @@ func _get_quest_action() -> Resource:
 	
 	return null
 
-func _start_dialogue(dialogue: DialogueResource) -> void:
+func _start_dialogue(dialogue: DialogueResource, show_menu_after: bool = false) -> void:
 	if not DialogueManager.dialogue_finished.is_connected(_on_dialogue_finished):
 		DialogueManager.dialogue_finished.connect(_on_dialogue_finished)
 	
 	_is_showing_actions = false
+	_show_menu_after_dialogue = show_menu_after
 	
 	if DialogueManager.is_active():
 		_is_switching_dialogue = true
@@ -117,6 +119,11 @@ func _face_target(target_pos: Vector2) -> void:
 func _on_dialogue_finished() -> void:
 	if not is_interacting or _is_switching_dialogue: return
 	
+	if _show_menu_after_dialogue:
+		_show_menu_after_dialogue = false
+		_open_actions_menu()
+		return
+		
 	if _is_showing_actions:
 		# If we were showing actions and the dialogue box closed, we are done
 		_end_interaction()

@@ -23,7 +23,7 @@ func update_costs(buildable: BuildableItem, tile_count: int, can_afford: bool) -
 	for material_id in buildable.build_costs:
 		var required = buildable.build_costs[material_id] * tile_count
 		var available = Inventory.count_item(material_id) if Inventory else 0
-		var item_data = ItemRegistry.get_item(material_id) if ItemRegistry else null
+		var item_data = Registries.get_item(material_id) if Registries else null
 		
 		_add_cost_item(item_data, required, available, can_afford)
 	
@@ -48,7 +48,7 @@ func update_refunds(buildable: BuildableItem) -> void:
 		
 	for material_id in buildable.build_costs:
 		var amount = buildable.build_costs[material_id]
-		var item_data = ItemRegistry.get_item(material_id) if ItemRegistry else null
+		var item_data = Registries.get_item(material_id) if Registries else null
 		
 		_add_refund_item(item_data, amount)
 	

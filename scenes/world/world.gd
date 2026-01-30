@@ -51,8 +51,14 @@ func _ready() -> void:
 	
 	# Load game data if we have a current world
 	if GameState.current_world_id != "":
-		is_new_world = not SaveManager.load_game(GameState.current_world_id)
-		print("Loaded world: ", GameState.current_world_name)
+		if SaveManager.load_game(GameState.current_world_id):
+			is_new_world = false
+			print("Loaded world: ", GameState.current_world_name)
+		else:
+			# If load fails (new world or corrupted), ensure we start with clean state
+			print("New world or load failed: Resetting game state.")
+			SaveManager.reset_game_state()
+			is_new_world = true
 	else:
 		print("No world context (playtest mode?)")
 	

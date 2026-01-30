@@ -31,8 +31,8 @@ func _ready() -> void:
 	_populate_items()
 	
 	# Connect signals
-	if BuildRegistry:
-		BuildRegistry.buildable_unlocked.connect(_on_buildable_unlocked)
+	if Registries:
+		Registries.buildable_unlocked.connect(_on_buildable_unlocked)
 	
 	if search_bar:
 		search_bar.text_changed.connect(_on_search_text_changed)
@@ -90,8 +90,8 @@ func _populate_items() -> void:
 	
 	# Group unlocked items by type
 	var items_by_type: Dictionary = {}
-	if BuildRegistry:
-		for item in BuildRegistry.get_unlocked_items():
+	if Registries:
+		for item in Registries.get_unlocked_items():
 			if not items_by_type.has(item.buildable_type):
 				items_by_type[item.buildable_type] = []
 			items_by_type[item.buildable_type].append(item)
@@ -151,17 +151,17 @@ func set_category_states(states: Dictionary) -> void:
 			_category_nodes[type].set_expanded(states[state_key], false)
 
 func _on_item_clicked(item: BuildableItem) -> void:
-	BuildRegistry.set_active(item)
+	Registries.set_active(item)
 	close()
 
 func _on_hotkey_bind_requested(item: BuildableItem, slot: int) -> void:
-	var current = BuildRegistry.get_hotbar_item(slot)
+	var current = Registries.get_hotbar_item(slot)
 	if current == item:
 		# Already bound - unbind (toggle)
-		BuildRegistry.unassign_from_hotbar(slot)
+		Registries.unassign_from_hotbar(slot)
 	else:
 		# Bind to this slot
-		BuildRegistry.assign_to_hotbar(slot, item)
+		Registries.assign_to_hotbar(slot, item)
 
 func _on_buildable_unlocked(item: BuildableItem) -> void:
 	_add_item_slot(item)

@@ -103,7 +103,7 @@ func _update_cost_display() -> void:
 	for material_id in buildable_item.build_costs:
 		var required = buildable_item.build_costs[material_id]
 		var available = Inventory.count_item(material_id) if Inventory else 0
-		var item_data = ItemRegistry.get_item(material_id) if ItemRegistry else null
+		var item_data = Registries.get_item(material_id) if Registries else null
 		
 		# Create a container for this cost item
 		var item_hbox = HBoxContainer.new()

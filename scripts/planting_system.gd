@@ -78,8 +78,8 @@ func _setup_managers() -> void:
 	set_mode(Mode.NONE)
 
 func _connect_signals() -> void:
-	if BuildRegistry:
-		BuildRegistry.active_buildable_changed.connect(_on_buildable_changed)
+	if Registries:
+		Registries.active_buildable_changed.connect(_on_buildable_changed)
 
 func _scan_existing_objects() -> void:
 	if not ysort_root or not tile_map: return
@@ -136,8 +136,8 @@ func _input(event: InputEvent) -> void:
 			set_mode(Mode.NONE)
 		else:
 			# If building, clear active item first
-			if BuildRegistry.active_buildable:
-				BuildRegistry.clear_active()
+			if Registries.active_buildable:
+				Registries.clear_active()
 			set_mode(Mode.DELETE)
 		return
 		
@@ -204,7 +204,7 @@ func plant_item_at(coords: Vector2i, buildable_id: String) -> bool:
 	if is_tile_occupied(coords):
 		return false
 		
-	var item: BuildableItem = BuildRegistry.get_buildable(buildable_id)
+	var item: BuildableItem = Registries.get_buildable(buildable_id)
 	if not item or not item.scene:
 		return false
 		
@@ -291,7 +291,7 @@ func from_save_data(data: Dictionary) -> void:
 		var coords: Vector2i = Vector2i(entry["x"], entry["y"])
 		var id: String = entry.get("buildable_id", "")
 		
-		var item: BuildableItem = BuildRegistry.get_buildable(id)
+		var item: BuildableItem = Registries.get_buildable(id)
 		if not item or not item.scene: continue
 		
 		# Spawn

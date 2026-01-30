@@ -42,7 +42,7 @@ func _complete_deposit(rat: RatAssistant) -> void:
 					continue
 					
 				var amount: int = rat.inventory.items[item_id]
-				var item: InventoryItem = ItemRegistry.get_item(item_id) if ItemRegistry else null
+				var item: InventoryItem = Registries.get_item(item_id) if Registries else null
 				
 				if item:
 					container.add_item(item, amount)

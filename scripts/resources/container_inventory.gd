@@ -236,7 +236,7 @@ func from_save_data(data: Array) -> void:
 		if slot_data == null:
 			_slots.append(null)
 		else:
-			var item: InventoryItem = ItemRegistry.get_item(slot_data["item_id"])
+			var item: InventoryItem = Registries.get_item(slot_data["item_id"])
 			if item:
 				_slots.append({
 					"item": item,

@@ -241,8 +241,8 @@ func _complete_harvest() -> void:
 	if drops.is_empty(): return
 	
 	# Give Item
-	if Inventory and ItemRegistry:
-		var item = ItemRegistry.get_item(drops.get("item_id", ""))
+	if Inventory and Registries:
+		var item = Registries.get_item(drops.get("item_id", ""))
 		var amount = drops.get("amount", 1)
 		if item:
 			Inventory.add_item(item, amount)

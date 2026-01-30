@@ -34,7 +34,7 @@ func update_held_item_visual() -> void:
 
 	# Show first item
 	var first_id: String = inventory.get_first_item_id()
-	var item: InventoryItem = ItemRegistry.get_item(first_id) if ItemRegistry else null
+	var item: InventoryItem = Registries.get_item(first_id) if Registries else null
 
 	if item:
 		held_item_sprite.texture = item.icon

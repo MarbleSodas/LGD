@@ -27,8 +27,8 @@ func interact() -> void:
 
 func _on_intro_finished() -> void:
 	# Give 1 Dandelion Tuft
-	if Inventory and ItemRegistry:
-		var tuft = ItemRegistry.get_item("dandelion_tuft")
+	if Inventory and Registries:
+		var tuft = Registries.get_item("dandelion_tuft")
 		if tuft:
 			Inventory.add_item(tuft, 1)
 			print("Glider gave 1 Dandelion Tuft")

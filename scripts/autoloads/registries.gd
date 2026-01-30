@@ -1,12 +1,12 @@
 extends Node
 
 # Merged Registry for InventoryItems and BuildableItems
-# Replaces ItemRegistry and BuildRegistry
+# Replaces Registries and Registries
 
-# --- ItemRegistry Signals ---
+# --- Registries Signals ---
 # (None existing)
 
-# --- BuildRegistry Signals ---
+# --- Registries Signals ---
 signal buildable_unlocked(item: BuildableItem)
 signal hotbar_changed(slot: int, item: BuildableItem)
 signal active_buildable_changed(item: BuildableItem)
@@ -20,8 +20,9 @@ const HOTBAR_SIZE = 10
 var _inventory_items: Dictionary = {}
 var _buildable_items: Dictionary = {}
 
-# --- BuildRegistry State ---
+# --- Registries State ---
 var _unlocked_ids: Array[String] = []
+var _unlocked_recipe_ids: Array[String] = []
 var _hotbar: Dictionary = {}
 var active_buildable: BuildableItem = null : 
 	set(val):
@@ -56,7 +57,7 @@ func _ready() -> void:
 	call_deferred("_connect_inventory_signals")
 
 # ------------------------------------------------------------------------------
-# Inventory Item Logic (formerly ItemRegistry)
+# Inventory Item Logic (formerly Registries)
 # ------------------------------------------------------------------------------
 
 func _load_inventory_items() -> void:
@@ -78,7 +79,7 @@ func get_item(id: String) -> InventoryItem:
 	return _inventory_items.get(id)
 
 # ------------------------------------------------------------------------------
-# Buildable Item Logic (formerly BuildRegistry)
+# Buildable Item Logic (formerly Registries)
 # ------------------------------------------------------------------------------
 
 func get_buildable(id: String) -> BuildableItem:
@@ -195,6 +196,18 @@ func _set_active_buildable(val: BuildableItem) -> void:
 		active_buildable_changed.emit(active_buildable)
 
 # ------------------------------------------------------------------------------
+# Recipe Unlock Logic
+# ------------------------------------------------------------------------------
+
+func is_recipe_unlocked(recipe_path: String) -> bool:
+	return recipe_path in _unlocked_recipe_ids
+
+func unlock_recipe(recipe_path: String) -> void:
+	if not recipe_path in _unlocked_recipe_ids:
+		_unlocked_recipe_ids.append(recipe_path)
+		# We could emit a signal here if needed, e.g. recipe_unlocked
+
+# ------------------------------------------------------------------------------
 # Unlock Logic
 # ------------------------------------------------------------------------------
 
@@ -229,3 +242,68 @@ func _check_all_unlocks() -> void:
 	for item_id in _unlock_rules:
 		if Inventory.has_item(item_id):
 			_check_unlocks_for_item(item_id)
+
+# ------------------------------------------------------------------------------
+# Save/Load Support
+# ------------------------------------------------------------------------------
+
+func reset() -> void:
+	_unlocked_ids.clear()
+	_unlocked_recipe_ids.clear()
+	_init_hotbar()
+	_unlock_default_items()
+	
+	# Re-check inventory for existing items (if Inventory wasn't reset yet, this might re-unlock things, 
+	# so order of reset matters in SaveManager)
+	if Inventory:
+		_check_all_unlocks()
+	
+	# Notify listeners that things might have changed (e.g. hotbar)
+	for i in range(HOTBAR_SIZE):
+		hotbar_changed.emit(i, _hotbar[i])
+
+func to_save_data() -> Dictionary:
+	var hotbar_data: Dictionary = {}
+	for slot in _hotbar:
+		if _hotbar[slot] != null:
+			hotbar_data[str(slot)] = _hotbar[slot].id
+			
+	return {
+		"unlocked_buildables": _unlocked_ids.duplicate(),
+		"unlocked_recipes": _unlocked_recipe_ids.duplicate(),
+		"hotbar": hotbar_data
+	}
+
+func from_save_data(data: Dictionary) -> void:
+	# 1. Restore Unlocked Buildables
+	if data.has("unlocked_buildables"):
+		var saved_ids: Array = data["unlocked_buildables"]
+		for id in saved_ids:
+			if not is_unlocked(id):
+				# We use unlock_item to ensure signals are emitted
+				unlock_item(id)
+
+	# 1.5 Restore Unlocked Recipes
+	if data.has("unlocked_recipes"):
+		_unlocked_recipe_ids.assign(data["unlocked_recipes"])
+	else:
+		_unlocked_recipe_ids.clear()
+	
+	# 2. Restore Hotbar
+	if data.has("hotbar"):
+		var hotbar_data: Dictionary = data["hotbar"]
+		# Clear existing hotbar first to avoid "swapping" logic interfering with restore
+		for i in range(HOTBAR_SIZE):
+			_hotbar[i] = null
+			
+		for slot_str in hotbar_data:
+			var slot: int = int(slot_str)
+			var item_id: String = hotbar_data[slot_str]
+			if _buildable_items.has(item_id):
+				_hotbar[slot] = _buildable_items[item_id]
+				hotbar_changed.emit(slot, _buildable_items[item_id])
+
+	# 3. Robustness check: Ensure all items currently in inventory trigger their unlocks
+	# This handles cases where save data might be partial or from an older version
+	if Inventory:
+		_check_all_unlocks()

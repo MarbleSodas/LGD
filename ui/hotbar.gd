@@ -12,9 +12,9 @@ func _ready() -> void:
 	deselect_slot()
 	
 	# Connect to registry
-	if BuildRegistry:
-		BuildRegistry.hotbar_changed.connect(_on_hotbar_changed)
-		BuildRegistry.active_buildable_changed.connect(_on_active_buildable_changed)
+	if Registries:
+		Registries.hotbar_changed.connect(_on_hotbar_changed)
+		Registries.active_buildable_changed.connect(_on_active_buildable_changed)
 		_sync_from_registry()
 
 func _cache_slots() -> void:
@@ -34,7 +34,7 @@ func _cache_slots() -> void:
 func _sync_from_registry() -> void:
 	# Load initial hotbar state from registry
 	for i in range(slots.size()):
-		var item = BuildRegistry.get_hotbar_item(i)
+		var item = Registries.get_hotbar_item(i)
 		_update_slot_icon(i, item)
 
 func _on_hotbar_changed(slot: int, item: BuildableItem) -> void:
@@ -45,17 +45,17 @@ func _on_hotbar_changed(slot: int, item: BuildableItem) -> void:
 		if item == null:
 			# If current slot was cleared, deselect it
 			deselect_slot()
-			BuildRegistry.clear_active()
+			Registries.clear_active()
 		else:
 			# If current slot changed item, activate the new item
-			BuildRegistry.set_active(item)
+			Registries.set_active(item)
 
 func _on_active_buildable_changed(item: BuildableItem) -> void:
 	if item == null:
 		deselect_slot()
 	else:
 		# If the item is in the hotbar, select that slot
-		var slot = BuildRegistry.get_slot_for_item(item)
+		var slot = Registries.get_slot_for_item(item)
 		if slot != -1:
 			select_slot(slot)
 		else:
@@ -91,7 +91,7 @@ func _on_slot_clicked(index: int) -> void:
 	_toggle_slot(index)
 
 func _toggle_slot(index: int) -> void:
-	var item = BuildRegistry.get_hotbar_item(index)
+	var item = Registries.get_hotbar_item(index)
 	
 	if item == null:
 		# Empty slot - do nothing
@@ -100,11 +100,11 @@ func _toggle_slot(index: int) -> void:
 	if current_slot == index:
 		# Pressing the same slot deselects it
 		deselect_slot()
-		BuildRegistry.clear_active()
+		Registries.clear_active()
 	else:
 		# Pressing a different slot selects it
 		select_slot(index)
-		BuildRegistry.set_active(item)
+		Registries.set_active(item)
 
 func select_slot(index: int) -> void:
 	if index < 0 or index >= slots.size():

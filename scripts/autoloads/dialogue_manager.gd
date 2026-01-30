@@ -86,3 +86,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel"):
 		close_dialogue()
 		get_viewport().set_input_as_handled()
+
+# ------------------------------------------------------------------------------
+# Save/Load Support
+# ------------------------------------------------------------------------------
+
+func reset() -> void:
+	shown_dialogues.clear()
+	close_dialogue()
+
+func to_save_data() -> Dictionary:
+	return shown_dialogues.duplicate()
+
+func from_save_data(data: Dictionary) -> void:
+	shown_dialogues = data.duplicate()

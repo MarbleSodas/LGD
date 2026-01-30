@@ -136,7 +136,7 @@ func _refresh_recipe_list() -> void:
 	
 	var visible_recipes = []
 	for r in current_building.recipes:
-		if not r.is_locked:
+		if not r.is_locked or Registries.is_recipe_unlocked(r.resource_path):
 			visible_recipes.append(r)
 			
 	visible_recipes.sort_custom(func(a, b):

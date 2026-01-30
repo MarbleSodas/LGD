@@ -36,7 +36,7 @@ var _held_source_slot: int = -1
 
 func _ready() -> void:
 	_init_slots()
-	# Add starting items deferred to ensure ItemRegistry is loaded
+	# Add starting items deferred to ensure Registries is loaded
 	call_deferred("_add_starting_items")
 
 func _add_starting_items() -> void:
@@ -49,10 +49,27 @@ func _add_starting_items() -> void:
 	# and receive their first item from Glider
 	pass
 
-	# if ItemRegistry:
-	# 	var tuft: InventoryItem = ItemRegistry.get_item("dandelion_tuft")
+	# if Registries:
+	# 	var tuft: InventoryItem = Registries.get_item("dandelion_tuft")
 	# 	if tuft:
 	# 		add_item(tuft, 5)
+
+## Reset inventory to default state
+func reset() -> void:
+	_max_slots = DEFAULT_SLOTS
+	_init_slots()
+	
+	# Clear held item
+	_held_item = null
+	_held_count = 0
+	_held_source_slot = -1
+	held_item_changed.emit(null, 0)
+	
+	slots_expanded.emit(_max_slots)
+	
+	# Notify UI of full reset
+	for i in range(_max_slots):
+		_emit_slot_change(i)
 
 ## Initialize all slots as empty
 func _init_slots() -> void:
@@ -561,7 +578,7 @@ func from_save_data(data: Dictionary) -> void:
 			if slot_data == null:
 				_slots.append(null)
 			else:
-				var item: InventoryItem = ItemRegistry.get_item(slot_data["item_id"])
+				var item: InventoryItem = Registries.get_item(slot_data["item_id"])
 				if item:
 					_slots.append({
 						"item": item,

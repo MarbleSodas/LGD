@@ -107,7 +107,7 @@ func _update_preview() -> void:
 	if preview_sprite.texture == null:
 		refresh_preview()
 
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if item and item.id != last_buildable_id:
 		current_flip_state = false
 		last_buildable_id = item.id
@@ -137,7 +137,7 @@ func _get_footprint_offsets(item: BuildableItem) -> Array[Vector2i]:
 	return offsets
 
 func _check_can_place(tile_coords: Vector2i, _world_pos: Vector2) -> bool:
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	var offsets = _get_footprint_offsets(item)
 
 	for offset in offsets:
@@ -174,7 +174,7 @@ func _overlaps_player(tile_center: Vector2) -> bool:
 	return player_rect.intersects(tile_rect)
 
 func _can_afford_placement(count: int) -> bool:
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if not item or item.build_costs.is_empty():
 		return true
 
@@ -185,7 +185,7 @@ func _can_afford_placement(count: int) -> bool:
 	return true
 
 func _consume_materials(count: int) -> bool:
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if not item or item.build_costs.is_empty():
 		return true
 
@@ -196,7 +196,7 @@ func _consume_materials(count: int) -> bool:
 	return true
 
 func refresh_preview() -> void:
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if not item: return
 
 	if item.preview_texture:
@@ -218,11 +218,11 @@ func handle_input(event: InputEvent) -> void:
 		if bulk_start_set:
 			_cancel_bulk_mode()
 		else:
-			BuildRegistry.clear_active()
+			Registries.clear_active()
 		return
 
 	if event.is_action_pressed("rotate_build"):
-		var item: BuildableItem = BuildRegistry.active_buildable
+		var item: BuildableItem = Registries.active_buildable
 		if item and item.supports_flip:
 			current_flip_state = not current_flip_state
 			queue_redraw()
@@ -248,7 +248,7 @@ func _place_single() -> void:
 		_spawn_object(tile_coords, snapped_pos)
 
 func _spawn_object(tile_coords: Vector2i, world_pos: Vector2) -> void:
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if not item or not item.scene: return
 
 	# Visuals
@@ -328,7 +328,7 @@ func _get_bulk_rect(start: Vector2i, end: Vector2i) -> Rect2i:
 
 func _draw_normal_grid() -> void:
 	# Draw footprint highlight if active item exists
-	var item: BuildableItem = BuildRegistry.active_buildable
+	var item: BuildableItem = Registries.active_buildable
 	if item:
 		var col = preview_color_valid if can_place else preview_color_invalid
 		var offsets = _get_footprint_offsets(item)
@@ -371,7 +371,7 @@ func _draw_bulk_selection() -> void:
 
 	# UI Update
 	if bulk_cost_panel and bulk_cost_panel.has_method("update_costs"):
-		bulk_cost_panel.update_costs(BuildRegistry.active_buildable, count, all_valid)
+		bulk_cost_panel.update_costs(Registries.active_buildable, count, all_valid)
 
 	# Draw
 	var preview_tex: Texture2D = preview_sprite.texture

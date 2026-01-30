@@ -470,7 +470,8 @@ func get_save_data() -> Dictionary:
 
 	var data: Dictionary = {
 		"sources": [],
-		"outputs": output_data
+		"outputs": output_data,
+		"output_rr_index": _output_rr_index
 	}
 
 	for s in assigned_sources:
@@ -491,6 +492,9 @@ func load_save_data(data: Dictionary) -> void:
 	if data.has("outputs"):
 		for out in data["outputs"]:
 			assigned_outputs.append(Vector2i(out["x"], out["y"]))
+
+	if data.has("output_rr_index"):
+		_output_rr_index = data["output_rr_index"]
 
 	if data.has("rat") and rat_instance:
 		rat_instance.load_save_data(data["rat"])

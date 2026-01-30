@@ -55,3 +55,20 @@ func get_active_quests() -> Dictionary:
 
 func get_completed_quests() -> Dictionary:
 	return completed_quests
+
+# Save/Load Support
+func to_save_data() -> Dictionary:
+	return {
+		"active": active_quests.duplicate(true),
+		"completed": completed_quests.duplicate(true)
+	}
+
+func from_save_data(data: Dictionary) -> void:
+	if data.has("active"):
+		active_quests = data["active"].duplicate(true)
+	if data.has("completed"):
+		completed_quests = data["completed"].duplicate(true)
+
+func reset() -> void:
+	active_quests.clear()
+	completed_quests.clear()

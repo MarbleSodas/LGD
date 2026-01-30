@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b8x72j6q5c2k"]
 
 [ext_resource type="Script" path="res://ui/components/interact_prompt.gd" id="1_script"]
-[ext_resource type="FontFile" uid="uid://d1c7n2w3s4r5" path="res://assets/sproutlands/fonts/pixelFont-7-8x14-sproutLands.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://assets/sproutlands/fonts/pixelFont-7-8x14-sproutLands.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bg"]
 

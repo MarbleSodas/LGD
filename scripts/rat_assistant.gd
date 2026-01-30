@@ -93,6 +93,7 @@ func get_save_data() -> Dictionary:
 		"state_name": state_name,
 		"current_task": current_task,
 		"target_coords": {"x": target_coords.x, "y": target_coords.y},
+		"position": {"x": global_position.x, "y": global_position.y},
 		"inventory": inventory.items
 	}
 
@@ -108,6 +109,9 @@ func load_save_data(data: Dictionary) -> void:
 		target_coords = Vector2i(data["target_coords"]["x"], data["target_coords"]["y"])
 		if tile_map:
 			target_position = tile_map.map_to_local(target_coords)
+
+	if data.has("position"):
+		global_position = Vector2(data["position"]["x"], data["position"]["y"])
 
 	if data.has("current_task"):
 		current_task = int(data["current_task"]) as TaskType

@@ -128,6 +128,9 @@ func save_game(world_id: String) -> bool:
 		"planting": {}, # Will be filled if PlantingSystem is found
 		"tips": TipsManager.to_save_data(),
 		"story_flags": GameState.story_flags,
+		"dialogue": DialogueManager.to_save_data(),
+		"registries": Registries.to_save_data(),
+		"quests": QuestManager.to_save_data(),
 		"player": {},
 		"ui_state": {}
 	}
@@ -180,7 +183,32 @@ func load_game(world_id: String) -> bool:
 	_apply_save_data(save_data)
 	return true
 
+## Resets all game systems to their default state.
+## Should be called before starting a new game or loading a save.
+func reset_game_state() -> void:
+	# 1. Reset Inventory first (as Registries depends on it)
+	Inventory.reset()
+	
+	# 2. Reset Registries (Unlocks, Hotbar)
+	Registries.reset()
+	
+	# 3. Reset Dialogue
+	DialogueManager.reset()
+	
+	# 4. Reset Tips
+	TipsManager.reset_tips()
+	
+	# 5. Reset GameState (Story flags, etc)
+	# GameState.clear_current_world() # This also clears flags
+	GameState.story_flags.clear() 
+	
+	# 6. Reset Quests
+	QuestManager.reset()
+
 func _apply_save_data(data: Dictionary) -> void:
+	# Reset everything first to ensure clean state
+	reset_game_state()
+
 	# 1. Inventory
 	if data.has("inventory"):
 		Inventory.from_save_data(data["inventory"])
@@ -210,6 +238,18 @@ func _apply_save_data(data: Dictionary) -> void:
 		GameState.story_flags = data["story_flags"]
 	else:
 		GameState.story_flags = {}
+
+	# Apply Dialogue
+	if data.has("dialogue"):
+		DialogueManager.from_save_data(data["dialogue"])
+		
+	# Apply Registries (Unlock progression)
+	if data.has("registries"):
+		Registries.from_save_data(data["registries"])
+		
+	# Apply Quests
+	if data.has("quests"):
+		QuestManager.from_save_data(data["quests"])
 
 	# Apply UI state
 	if data.has("ui_state") and data["ui_state"].has("build_menu_collapsed"):

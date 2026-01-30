@@ -9,6 +9,7 @@ signal interaction_ended
 @export var intro_dialogue: DialogueResource
 @export var greeting_dialogue: DialogueResource # Optional short greeting for repeat interactions
 @export var actions: Array[Resource] = [] # NPCAction resources
+@export var quest: QuestResource
 @export var action_menu_prompt: String = "What would you like to do?"
 
 var interact_prompt_scene = preload("res://ui/components/interact_prompt.tscn")
@@ -24,6 +25,7 @@ var is_interacting: bool = false
 var is_hovered: bool = false
 var _is_showing_actions: bool = false
 var _is_switching_dialogue: bool = false
+var _quest_panel: Control = null
 
 func _ready() -> void:
 	home_position = global_position
@@ -77,6 +79,22 @@ func interact() -> void:
 	else:
 		_open_actions_menu()
 
+func _get_quest_action() -> Resource:
+	if quest == null:
+		return null
+	
+	var state = QuestManager.get_quest_state(quest.id)
+	if state == QuestManager.QuestState.LOCKED or state == QuestManager.QuestState.COMPLETED:
+		return null
+	
+	if state == QuestManager.QuestState.UNLOCKED or state == QuestManager.QuestState.ACTIVE:
+		var action = NPCAction.new()
+		action.display_name = "Quest"
+		action.action_id = "quest_action"
+		return action
+	
+	return null
+
 func _start_dialogue(dialogue: DialogueResource) -> void:
 	if not DialogueManager.dialogue_finished.is_connected(_on_dialogue_finished):
 		DialogueManager.dialogue_finished.connect(_on_dialogue_finished)
@@ -108,9 +126,9 @@ func _on_dialogue_finished() -> void:
 	# (User requested to exit instead of returning to action menu)
 	_end_interaction()
 
-func _show_actions_in_box() -> void:
+func _show_actions_in_box(display_actions: Array) -> void:
 	if DialogueManager.dialogue_box:
-		DialogueManager.dialogue_box.show_actions(actions, action_menu_prompt)
+		DialogueManager.dialogue_box.show_actions(display_actions, action_menu_prompt)
 		
 		# We need to listen for selection OR close
 		if not DialogueManager.dialogue_box.action_selected.is_connected(_on_action_selected):
@@ -129,14 +147,36 @@ func _open_actions_menu() -> void:
 			s_portrait = intro_dialogue.portrait
 			
 		DialogueManager.start_custom(s_name, s_portrait)
-		_show_actions_in_box()
+		
+		var display_actions = actions.duplicate()
+		var quest_action = _get_quest_action()
+		if quest_action:
+			display_actions.append(quest_action)
+			
+		_show_actions_in_box(display_actions)
 
 func _on_action_selected(action_id: String) -> void:
 	handle_action(action_id)
 
 func handle_action(action_id: String) -> void:
-	# Override in child
+	# Override in child or use for base quest system
 	print("Action: ", action_id)
+	
+	if action_id == "quest_action":
+		_close_menu()
+		var panel_scene = load("res://ui/components/quest_deposit_panel.tscn")
+		_quest_panel = panel_scene.instantiate()
+		
+		var ui_layer = get_tree().get_first_node_in_group("ui_layer")
+		if ui_layer:
+			ui_layer.add_child(_quest_panel)
+		else:
+			get_tree().root.add_child(_quest_panel)
+			
+		_quest_panel.setup(quest)
+		_quest_panel.quest_submitted.connect(_on_quest_submitted)
+		_quest_panel.panel_closed.connect(func(): _quest_panel.queue_free())
+		return
 	
 	# Default behavior: Close menu after action
 	if action_id == "leave" or action_id == "close":
@@ -148,6 +188,23 @@ func handle_action(action_id: String) -> void:
 func _close_menu() -> void:
 	if DialogueManager.is_active():
 		DialogueManager.close_dialogue()
+	else:
+		_end_interaction()
+
+func _on_quest_submitted(quest_id: String) -> void:
+	QuestManager.complete_quest(quest_id)
+	
+	if _quest_panel:
+		_quest_panel.queue_free()
+		_quest_panel = null
+	
+	if quest and quest.reward_dialogue_id != "":
+		var d_path = "res://resources/dialogues/" + quest.reward_dialogue_id + ".tres"
+		if FileAccess.file_exists(d_path):
+			var res = load(d_path)
+			_start_dialogue(res)
+		else:
+			_end_interaction()
 	else:
 		_end_interaction()
 

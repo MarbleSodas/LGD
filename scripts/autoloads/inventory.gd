@@ -241,12 +241,9 @@ func swap_slots(from_slot: int, to_slot: int) -> void:
 	_emit_slot_change(from_slot)
 	_emit_slot_change(to_slot)
 
-## Check if the inventory has a specific item (by ID)
-func has_item(item_id: String) -> bool:
-	for slot_data in _slots:
-		if slot_data != null and slot_data.item.id == item_id:
-			return true
-	return false
+## Check if the inventory has a specific item (by ID) and optional count
+func has_item(item_id: String, count: int = 1) -> bool:
+	return count_item(item_id) >= count
 
 # ------------------------------------------------------------------------------
 # Held Item & Drag System

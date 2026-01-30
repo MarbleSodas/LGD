@@ -19,6 +19,6 @@ required_items = {
 }
 rewards = {}
 npc_id = "glider"
-unlock_conditions = Array[ExtResource("res://scripts/resources/quest_condition.gd")]([SubResource("QuestCondition_1")])
+unlock_conditions = Array[Resource]([SubResource("QuestCondition_1")])
 condition_operator = "AND"
 reward_dialogue_id = "test_quest_complete"

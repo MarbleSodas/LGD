@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestResource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_condition.gd" id="1_cond"]
+[ext_resource type="Script" path="res://scripts/resources/quest_resource.gd" id="2_quest"]
+
+[sub_resource type="Resource" id="QuestCondition_1"]
+script = ExtResource("1_cond")
+condition_type = 0
+target_id = "shroom"
+required_count = 1
+
+[resource]
+script = ExtResource("2_quest")
+id = "quest_shroom_collector"
+title = "Shroom Collector"
+description = "Glider needs a massive stash of shrooms for... reasons. Collect 50 shrooms."
+required_items = {
+"shroom": 50
+}
+rewards = {
+"stone": 50
+}
+npc_id = "glider"
+unlock_conditions = Array[Resource]([SubResource("QuestCondition_1")])
+condition_operator = "AND"
+reward_dialogue_id = "quest_shroom_collector_complete"

@@ -1,0 +1,34 @@
+[gd_scene load_steps=4 format=3 uid="uid://8xoocja6kbnj"]
+
+[ext_resource type="Texture2D" uid="uid://b60s5n4q0rddm" path="res://assets/objects/plants/Tree.png" id="1_vplca"]
+[ext_resource type="Script" path="res://scripts/tree.gd" id="2_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tree"]
+size = Vector2(24, 14)
+
+[node name="Tree" type="Sprite2D"]
+texture = ExtResource("1_vplca")
+offset = Vector2(0, -32)
+hframes = 3
+script = ExtResource("2_script")
+growth_stages = Array[Dictionary]([{
+"duration": 30.0,
+"frame": 0
+}, {
+"duration": 30.0,
+"frame": 1
+}, {
+"duration": 0.0,
+"frame": 2
+}])
+harvest_item_id = "wood"
+harvest_amount = 3
+harvest_time = 3.0
+regrows = true
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, -7)
+shape = SubResource("RectangleShape2D_tree")
+disabled = true

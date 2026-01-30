@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="QuestResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_resource.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "build_base"
+title = "A Home for You"
+description = "Glider can build a house for you if you provide the materials."
+required_items = {
+"shroom": 200
+}
+rewards = {}

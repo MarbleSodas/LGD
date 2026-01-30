@@ -45,6 +45,21 @@ func open(house: MushroomHouse) -> void:
 	if build_menu and build_menu.has_method("close"):
 		build_menu.close()
 		
+	# Close inventory panel if open
+	var inventory_panel = get_tree().get_first_node_in_group("inventory_panel")
+	if inventory_panel and inventory_panel.has_method("close"):
+		inventory_panel.close()
+		
+	# Close container panel if open
+	var container_panel = get_tree().get_first_node_in_group("container_panel")
+	if container_panel and container_panel.has_method("close"):
+		container_panel.close()
+		
+	# Close processor menu if open
+	var processor_menu = get_tree().get_first_node_in_group("processor_menu")
+	if processor_menu and processor_menu.has_method("close"):
+		processor_menu.close()
+		
 	# Disable planting/deletion modes
 	if house.planting_system:
 		house.planting_system.set_mode(PlantingSystem.Mode.NONE)
@@ -121,8 +136,9 @@ func _input(event: InputEvent) -> void:
 			_handle_left_click(current_house.get_global_mouse_position())
 		get_viewport().set_input_as_handled()
 		
-	elif event.is_action_pressed("ui_cancel") or event.is_action_pressed("toggle_inventory"):
+	elif event.is_action_pressed("ui_cancel") or event.is_action_pressed("toggle_inventory") or event.is_action_pressed("harvest"):
 		close()
+		get_viewport().set_input_as_handled()
 
 func _init_drag_action(global_pos: Vector2) -> void:
 	if not current_house or not current_house.tile_map: return

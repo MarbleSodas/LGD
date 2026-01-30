@@ -133,6 +133,21 @@ func complete_quest(quest_id: String) -> void:
 		return
 		
 	_quest_states[quest_id] = QuestState.COMPLETED
+	
+	# Distribute Rewards
+	if _all_quests.has(quest_id):
+		var quest = _all_quests[quest_id]
+		for reward_id in quest.rewards:
+			var count = quest.rewards[reward_id]
+			var item = Registries.get_item(reward_id)
+			if item:
+				var added = Inventory.add_item_quantity(item, count)
+				if added < count:
+					push_warning("QuestManager: Inventory full, could not add full reward " + reward_id)
+				print("Quest Reward: ", reward_id, " x", count)
+			else:
+				push_error("QuestManager: Unknown reward item " + reward_id)
+	
 	quest_completed.emit(quest_id)
 	quest_updated.emit(quest_id)
 	print("Quest Completed: ", quest_id)

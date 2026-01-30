@@ -9,6 +9,7 @@ signal slot_hovered(index: int)
 var target_inventory: Object = null
 
 @onready var item_icon: TextureRect = $ItemIcon
+@onready var ghost_icon: TextureRect = $GhostIcon
 @onready var stack_label: Label = $StackCount
 
 # Preload slot textures
@@ -45,15 +46,22 @@ func set_item(item_texture: Texture2D, count: int = 0) -> void:
 	if item_texture:
 		item_icon.texture = item_texture
 		item_icon.visible = true
+		ghost_icon.visible = false # Hide ghost if item present
 	else:
 		item_icon.texture = null
 		item_icon.visible = false
+		ghost_icon.visible = (ghost_icon.texture != null) # Show ghost if set
 	
 	if count > 1:
 		stack_label.text = str(count)
 		stack_label.visible = true
 	else:
 		stack_label.visible = false
+
+func set_ghost_item(ghost_texture: Texture2D) -> void:
+	ghost_icon.texture = ghost_texture
+	if not item_icon.visible:
+		ghost_icon.visible = (ghost_texture != null)
 
 func _update_texture() -> void:
 	# Priority: Selected > Hovered > Normal
@@ -169,6 +177,11 @@ func _handle_external_place() -> void:
 	var held_item: InventoryItem = held.item
 	var held_count: int = held.count
 	
+	# Check validity if method exists
+	if target_inventory.has_method("is_item_valid_for_slot"):
+		if not target_inventory.is_item_valid_for_slot(slot_index, held_item):
+			return
+	
 	var slot_data: Variant = target_inventory.get_slot(slot_index)
 	
 	# Case 1: Empty slot
@@ -229,6 +242,11 @@ func _handle_external_place_one() -> void:
 	var held: Dictionary = Inventory.get_held_item()
 	var held_item: InventoryItem = held.item
 	var held_count: int = held.count
+	
+	# Check validity if method exists
+	if target_inventory.has_method("is_item_valid_for_slot"):
+		if not target_inventory.is_item_valid_for_slot(slot_index, held_item):
+			return
 	
 	var slot_data: Variant = target_inventory.get_slot(slot_index)
 	

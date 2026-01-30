@@ -20,5 +20,6 @@ ignore_system_offset = false
 footprint_size = Vector2i(1, 1)
 supports_flip = false
 build_costs = {
-"wood": 10
+"wood": 40,
+"stone": 10
 }

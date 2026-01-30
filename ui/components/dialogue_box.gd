@@ -99,6 +99,12 @@ func open(dialogue: DialogueResource) -> void:
 		_close_tween.kill()
 	
 	current_dialogue = dialogue
+	
+	# Guard against empty dialogues which would otherwise block player movement
+	if not current_dialogue.entries or current_dialogue.entries.is_empty():
+		emit_signal("dialogue_completed")
+		return
+		
 	current_line_index = 0
 	is_open = true
 	visible = true
@@ -130,10 +136,7 @@ func open(dialogue: DialogueResource) -> void:
 	tween.parallel().tween_property(dialogue_panel, "modulate:a", 1.0, 0.2)
 	tween.parallel().tween_property(dialogue_panel, "position:y", dialogue_panel.position.y - 20, 0.2)
 	
-	if current_dialogue.entries.size() > 0:
-		_show_current_entry()
-	else:
-		close()
+	_show_current_entry()
 
 func close() -> void:
 	if not is_open: return  # Prevent double-close

@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://dkwvju6otpg8x"]
+
+[ext_resource type="Texture2D" uid="uid://bnh47xbf82wtb" path="res://assets/objects/buildings/StoneDeposit.png" id="1_texture"]
+[ext_resource type="Script" path="res://scripts/stone_deposit.gd" id="2_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stone"]
+size = Vector2(62, 20)
+
+[node name="StoneDeposit" type="Sprite2D"]
+texture = ExtResource("1_texture")
+offset = Vector2(0, -9)
+script = ExtResource("2_script")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_stone")

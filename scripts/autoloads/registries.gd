@@ -35,7 +35,7 @@ var active_buildable: BuildableItem = null :
 var _unlock_rules: Dictionary = {
 	"shroom": ["mushroom_plant", "mushroom_house"],
 	"acorn": ["tree"],
-	"wood": ["barrel", "processor"]
+	"wood": ["barrel"]
 }
 
 # Preferred hotbar slots for auto-assignment
@@ -228,6 +228,7 @@ func _connect_inventory_signals() -> void:
 func _on_inventory_item_added(item: InventoryItem, _slot: int, _count: int) -> void:
 	if item:
 		_check_unlocks_for_item(item.id)
+		_check_complex_unlocks()
 
 func _check_unlocks_for_item(item_id: String) -> void:
 	if _unlock_rules.has(item_id):
@@ -236,6 +237,14 @@ func _check_unlocks_for_item(item_id: String) -> void:
 			if not is_unlocked(buildable_id):
 				unlock_item(buildable_id)
 
+func _check_complex_unlocks() -> void:
+	if not Inventory: return
+	
+	# Processor Unlock: Requires Wood AND Stone
+	if Inventory.has_item("wood") and Inventory.has_item("stone"):
+		if not is_unlocked("processor"):
+			unlock_item("processor")
+
 func _check_all_unlocks() -> void:
 	if not Inventory: return
 	
@@ -243,6 +252,8 @@ func _check_all_unlocks() -> void:
 	for item_id in _unlock_rules:
 		if Inventory.has_item(item_id):
 			_check_unlocks_for_item(item_id)
+	
+	_check_complex_unlocks()
 
 # ------------------------------------------------------------------------------
 # Save/Load Support

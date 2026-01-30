@@ -181,24 +181,13 @@ func to_save_data() -> Dictionary:
 
 func from_save_data(data: Dictionary) -> void:
 	if data.has("states"):
-		var saved_states = data["states"]
 		_quest_states.clear()
-		for key in saved_states:
-			_quest_states[key] = int(saved_states[key])
+		for key in data["states"]:
+			_quest_states[key] = int(data["states"][key])
 			
 	if data.has("deposits"):
 		_quest_deposits = data["deposits"].duplicate(true)
 	
-	# Migration/Legacy Support
-	if data.has("active") and _quest_states.is_empty():
-		for q_id in data["active"]:
-			_quest_states[q_id] = QuestState.ACTIVE
-			_quest_deposits[q_id] = data["active"][q_id].get("current_items", {})
-	
-	if data.has("completed") and _quest_states.values().count(QuestState.COMPLETED) == 0:
-		for q_id in data["completed"]:
-			_quest_states[q_id] = QuestState.COMPLETED
-
 	_check_conditions_for_unlocks()
 
 func reset() -> void:

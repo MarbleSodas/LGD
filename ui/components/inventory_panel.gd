@@ -18,20 +18,20 @@ func _ready() -> void:
 	# Initial state: Closed (Off-screen right)
 	panel.offset_left = 0
 	panel.offset_right = PANEL_WIDTH
-	
+
 	_populate_slots()
-	
+
 	if Inventory:
 		Inventory.slots_expanded.connect(_on_slots_expanded)
 		Inventory.held_item_changed.connect(_on_held_item_changed)
-		
+
 		# specific check in case we reloaded scene while holding something
 		var held = Inventory.get_held_item()
 		if held.has("item") and held.item != null:
 			_on_held_item_changed(held.item, held.count)
-	
+
 	sort_button.pressed.connect(_on_sort_pressed)
-	
+
 	cursor_preview.visible = false
 	cursor_preview.size = Vector2(48, 48) # Match slot size
 	cursor_preview.z_index = 100 # Ensure cursor is always on top of other UI panels
@@ -67,7 +67,7 @@ func toggle() -> void:
 func open() -> void:
 	if is_open: return
 	is_open = true
-	
+
 	if _tween: _tween.kill()
 	_tween = create_tween()
 	_tween.set_ease(Tween.EASE_OUT)
@@ -80,11 +80,11 @@ func open() -> void:
 func close() -> void:
 	if not is_open: return
 	is_open = false
-	
+
 	# Force return held item when closing
 	if Inventory:
 		Inventory.return_held_item()
-	
+
 	if _tween: _tween.kill()
 	_tween = create_tween()
 	_tween.set_ease(Tween.EASE_IN)
@@ -98,7 +98,7 @@ func _populate_slots() -> void:
 	# Clear existing slots
 	for child in grid.get_children():
 		child.queue_free()
-	
+
 	# Create slots based on inventory capacity
 	var slot_count = Inventory.get_slot_count() if Inventory else 20
 	for i in range(slot_count):
@@ -123,7 +123,7 @@ func _on_held_item_changed(item: InventoryItem, count: int) -> void:
 		cursor_label.visible = count > 1
 		cursor_preview.visible = true
 		cursor_preview.global_position = get_global_mouse_position() - (cursor_preview.size / 2.0)
-		
+
 		# Allow clicking container slots (which are in front) but catch clicks outside (behind)
 		mouse_filter = MouseFilter.MOUSE_FILTER_PASS
 	else:

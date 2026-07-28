@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=9 format=3 uid="uid://c8q4j2k3l4m5n"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://c8q4j2k3l4m5n"]
 
 [ext_resource type="Texture2D" uid="uid://doshn3xus71rx" path="res://assets/sproutlands/Sprite sheets/Dialouge UI/dialog box character finished talking click to continue indicator - spritesheet .png" id="1_tex"]
 
@@ -54,7 +54,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_2soc2")
 }],
-"loop": true,
+"loop": 1,
 "name": &"default",
 "speed": 8.0
 }]

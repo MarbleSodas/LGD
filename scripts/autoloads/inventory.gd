@@ -431,78 +431,59 @@ func place_one(slot: int) -> bool:
 func return_held_item() -> void:
 	if not is_holding_item():
 		return
-		
+
+	var returning_item: InventoryItem = _held_item
+	var remaining: int = _held_count
+
 	# Try original source first
 	if _held_source_slot != -1 and _held_source_slot < _max_slots:
 		var slot_data: Variant = _slots[_held_source_slot]
-		# If empty
 		if slot_data == null:
-			_slots[_held_source_slot] = { "item": _held_item, "count": _held_count }
-			inventory_changed.emit(_held_source_slot, _held_item, _held_count)
+			_slots[_held_source_slot] = { "item": returning_item, "count": remaining }
+			inventory_changed.emit(_held_source_slot, returning_item, remaining)
 			_clear_held_item()
 			return
-		# Or same item with space
-		elif slot_data.item.id == _held_item.id:
-			var space: int = slot_data.item.max_stack - slot_data.count
-			if space >= _held_count:
-				slot_data.count += _held_count
+		elif slot_data.item.id == returning_item.id:
+			var available_space: int = slot_data.item.max_stack - slot_data.count
+			var source_return_count: int = min(remaining, available_space)
+			if source_return_count > 0:
+				slot_data.count += source_return_count
+				remaining -= source_return_count
 				inventory_changed.emit(_held_source_slot, slot_data.item, slot_data.count)
-				_clear_held_item()
-				return
-				
-	# If source failed, try adding normally
-	var _result: int = add_item(_held_item, _held_count)
-	
-	# Manual placement fallback if add_item logic didn't clear everything (though add_item handles it)
-	# Since add_item emits signals, we just clear what we can.
-	# If items are lost, we warn.
-	
-	# But wait, add_item returns slot index, not remaining count.
-	# Let's fix this logic properly.
-	# Actually add_item handles the adding. If it returns >= 0 or handles it, we are good.
-	# But add_item might fail if full.
-	# We should check if we still have items to place?
-	
-	# Since we can't easily check 'remaining' from add_item's return (it returns slot index),
-	# let's try to infer or just rely on add_item's behavior. 
-	# Actually, add_item emits 'item_added' which is not ideal for return.
-	# Let's implement manual return logic to avoid signal noise if possible, or just accept it.
-	
-	# Re-implementation for safety:
-	var remaining: int = _held_count
-	var stack_res: Dictionary = _try_stack_item(_held_item, remaining)
-	remaining = stack_res.remaining
-	
+
 	if remaining > 0:
-		while remaining > 0:
-			var empty_slot: int = get_first_empty_slot()
-			if empty_slot == -1:
-				break
-			
-			var to_add: int = min(remaining, _held_item.max_stack)
-			_slots[empty_slot] = { "item": _held_item, "count": to_add }
-			remaining -= to_add
-			inventory_changed.emit(empty_slot, _held_item, to_add)
-			
-	if remaining > 0:
-		print("Warning: Inventory full, lost ", remaining, " items on return.")
-		
-	_clear_held_item()
+		remaining -= add_item_quantity(returning_item, remaining)
+
+	if remaining <= 0:
+		_clear_held_item()
+		return
+
+	_held_item = returning_item
+	_held_count = remaining
+	_held_source_slot = -1
+	held_item_changed.emit(_held_item, _held_count)
+	push_warning("Inventory: Could not return %d held item(s); keeping them on the cursor." % remaining)
 
 ## Clear held item without returning to inventory
 func clear_held_item_external() -> void:
 	_clear_held_item()
 
 ## Set the held item from an external source
-func set_held_item_external(item: InventoryItem, count: int) -> void:
+func set_held_item_external(item: InventoryItem, count: int) -> bool:
+	if item == null or count <= 0:
+		return false
+
 	if is_holding_item():
 		return_held_item()
-		
+		if is_holding_item():
+			return false
+
 	_held_item = item
 	_held_count = count
 	_held_source_slot = -1 # External source
-	
+
 	held_item_changed.emit(_held_item, _held_count)
+	return true
 
 ## Sort inventory by category, then ID, then count
 func sort_inventory() -> void:

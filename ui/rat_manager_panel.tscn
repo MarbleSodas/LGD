@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://cxqngioiimdhb"]
+[gd_scene load_steps=5 format=3 uid="uid://dx8jwse7eiwfp"]
 
 [ext_resource type="Script" uid="uid://b3olxpp3ag2y0" path="res://ui/rat_manager_panel.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dn2uyaxwgp8sa" path="res://assets/sproutlands/emojis-free/emoji style ui/Inventory_Spritesheet.png" id="2_bg"]

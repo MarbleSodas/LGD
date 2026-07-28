@@ -6,7 +6,7 @@ func _ready() -> void:
 	# Connect Play button
 	var play_btn = $CenterContainer/VBoxContainer/PlayButton
 	play_btn.pressed.connect(_on_play_pressed)
-	
+
 	# Initial state
 	world_list_panel.hide()
 

@@ -127,7 +127,7 @@ func save_game(world_id: String) -> bool:
 		"inventory": Inventory.to_save_data(),
 		"planting": {}, # Will be filled if PlantingSystem is found
 		"tips": TipsManager.to_save_data(),
-		"story_flags": GameState.story_flags,
+		"story_flags": GameState.to_save_data(),
 		"dialogue": DialogueManager.to_save_data(),
 		"registries": Registries.to_save_data(),
 		"quests": QuestManager.to_save_data(),
@@ -198,9 +198,8 @@ func reset_game_state() -> void:
 	# 4. Reset Tips
 	TipsManager.reset_tips()
 	
-	# 5. Reset GameState (Story flags, etc)
-	# GameState.clear_current_world() # This also clears flags
-	GameState.story_flags.clear() 
+	# 5. Reset world-specific progression without losing the selected world
+	GameState.reset_progress()
 	
 	# 6. Reset Quests
 	QuestManager.reset()
@@ -234,10 +233,12 @@ func _apply_save_data(data: Dictionary) -> void:
 		TipsManager.from_save_data(data["tips"])
 
 	# Apply Story Flags
-	if data.has("story_flags"):
-		GameState.story_flags = data["story_flags"]
+	var story_flags: Variant = data.get("story_flags", {})
+	if story_flags is Dictionary:
+		GameState.from_save_data(story_flags)
 	else:
-		GameState.story_flags = {}
+		push_warning("SaveManager: Ignoring malformed story_flags save data.")
+		GameState.reset_progress()
 
 	# Apply Dialogue
 	if data.has("dialogue"):

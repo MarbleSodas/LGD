@@ -71,7 +71,7 @@ func _setup_missing_resources_ui() -> void:
 	missing_resources_ui.visible = false
 	missing_resources_ui.z_index = 101
 	missing_resources_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0, 0, 0, 0.6)
 	style.set_corner_radius_all(4)
@@ -80,7 +80,7 @@ func _setup_missing_resources_ui() -> void:
 	style.content_margin_top = 4
 	style.content_margin_bottom = 4
 	missing_resources_ui.add_theme_stylebox_override("panel", style)
-	
+
 	add_child(missing_resources_ui)
 
 # ------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ func _update_preview() -> void:
 
 		can_place = _check_can_place(tile_coords, snapped_pos)
 		preview_sprite.modulate = preview_color_valid if can_place else preview_color_invalid
-		
+
 		_update_missing_resources_display(snapped_pos)
 
 func _update_missing_resources_display(pos: Vector2) -> void:
@@ -176,7 +176,7 @@ func _update_missing_resources_display(pos: Vector2) -> void:
 		current_key += "%s:%d/%d|" % [data.id, data.current, data.required]
 
 	missing_resources_ui.visible = true
-	
+
 	if current_key != last_missing_key:
 		last_missing_key = current_key
 		_rebuild_missing_resources_ui(missing_items)
@@ -192,7 +192,7 @@ func _rebuild_missing_resources_ui(missing_items: Array[Dictionary]) -> void:
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 	missing_resources_ui.add_child(vbox)
-	
+
 	var header = Label.new()
 	header.text = "Missing:"
 	header.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
@@ -203,9 +203,9 @@ func _rebuild_missing_resources_ui(missing_items: Array[Dictionary]) -> void:
 	for data in missing_items:
 		var hbox = HBoxContainer.new()
 		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		
+
 		var item_data = Registries.get_item(data.id)
-		
+
 		if item_data and item_data.icon:
 			var icon = TextureRect.new()
 			icon.texture = item_data.icon
@@ -213,13 +213,13 @@ func _rebuild_missing_resources_ui(missing_items: Array[Dictionary]) -> void:
 			icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			hbox.add_child(icon)
-			
+
 		var label = Label.new()
 		label.text = "%d/%d" % [data.current, data.required]
 		label.add_theme_font_size_override("font_size", 10)
 		label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.8))
 		hbox.add_child(label)
-		
+
 		vbox.add_child(hbox)
 
 func _get_footprint_offsets(item: BuildableItem) -> Array[Vector2i]:

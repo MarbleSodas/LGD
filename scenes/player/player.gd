@@ -6,13 +6,14 @@ extends CharacterBody2D
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
+var movement_enabled: bool = true
 
 func _ready() -> void:
 	sprite.play("idle")
 
 
 func _physics_process(_delta: float) -> void:
-	if DialogueManager and DialogueManager.is_active():
+	if not movement_enabled or (DialogueManager and DialogueManager.is_active()):
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -39,3 +40,10 @@ func _physics_process(_delta: float) -> void:
 
 func get_interact_area() -> Area2D:
 	return $InteractArea
+
+func lock_movement() -> void:
+	movement_enabled = false
+	velocity = Vector2.ZERO
+
+func unlock_movement() -> void:
+	movement_enabled = true

@@ -45,7 +45,7 @@ size = Vector2(22, 9)
 [sub_resource type="CircleShape2D" id="CircleShape2D_onrkg"]
 radius = 36.013885
 
-[node name="Hana" type="CharacterBody2D"]
+[node name="Hana" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("2_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

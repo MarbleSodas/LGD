@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=6 format=3 uid="uid://beisgsnx4rkgk"]
+[gd_resource type="Theme" format=3 uid="uid://beisgsnx4rkgk"]
 
 [ext_resource type="FontFile" uid="uid://dqtcmyslgqxwj" path="res://assets/sproutlands/fonts/friendlyscribbles.ttf" id="1_font"]
 [ext_resource type="Texture2D" uid="uid://bowrncjr456bo" path="res://assets/sproutlands/Sprite sheets/UI Big Play Button.png" id="2_btn"]

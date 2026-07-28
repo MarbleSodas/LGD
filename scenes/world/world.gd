@@ -7,8 +7,6 @@ const STONE_RES = preload("res://resources/buildables/stone_deposit.tres")
 const INTRO_DIALOGUE_RES = preload("res://resources/dialogues/intro_awakening.tres")
 
 const AUTO_SAVE_INTERVAL: float = 60.0
-const NODE_UI: String = "UI"
-const GROUP_UI_LAYER: String = "ui_layer"
 const SCENE_START_MENU: String = "res://scenes/start_menu/start_menu.tscn"
 
 # Starter resource positions (tile coordinates)
@@ -40,6 +38,8 @@ const SCENE_START_MENU: String = "res://scenes/start_menu/start_menu.tscn"
 	set(value):
 		starter_stone_deposits = value
 		queue_redraw()
+
+@onready var ui_layer: GameUI = $UI
 
 var auto_save_timer: Timer
 
@@ -96,7 +96,6 @@ func _spawn_starter_resources() -> void:
 		planting_system.plant_item_at(tile_coords, "stone_deposit") 
 
 func _play_intro() -> void:
-	var ui_layer: Node = _get_ui_layer()
 	if not ui_layer:
 		push_error("UI layer not found, cannot play intro")
 		return
@@ -140,64 +139,9 @@ func _notification(what: int) -> void:
 		_save_and_quit()
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_H:
-		var res = load("res://resources/dialogues/test_dialogue.tres")
-		if res and DialogueManager:
-			DialogueManager.start_dialogue(res)
-
 	if event.is_action_pressed("ui_cancel"):
-		if _close_any_open_ui():
+		if ui_layer and ui_layer.handle_cancel_request():
 			get_viewport().set_input_as_handled()
-			return
-			
-		# Toggle Pause Menu
-		var ui_layer: Node = _get_ui_layer()
-		if ui_layer:
-			var pause_menu: Control = ui_layer.get_node_or_null("PauseMenu")
-			if pause_menu and not pause_menu.visible:
-				pause_menu.open()
-				get_viewport().set_input_as_handled()
-
-func _close_any_open_ui() -> bool:
-	# 0. Highest Priority: Dialogue
-	if DialogueManager and DialogueManager.is_active():
-		DialogueManager.close_dialogue()
-		return true
-
-	# 1. High Priority: Return held item (Global action)
-	if Inventory and Inventory.is_holding_item():
-		Inventory.return_held_item()
-		return true
-
-	var ui_layer: Node = _get_ui_layer()
-	if ui_layer:
-		# 2. Container Panel (Topmost UI)
-		var container: Control = ui_layer.get_node_or_null("ContainerPanel")
-		if container and container.get("is_open"):
-			container.close()
-			return true
-
-		# Processor Menu
-		var processor_menu: Control = ui_layer.get_node_or_null("ProcessorMenu")
-		if processor_menu and processor_menu.get("is_open"):
-			processor_menu.close()
-			return true
-			
-		# 3. Rat Manager Panel
-		var rat_panel: Control = ui_layer.get_node_or_null("RatManagerPanel")
-		if rat_panel and rat_panel.visible:
-			rat_panel.close()
-			return true
-			
-	return false
-
-func _get_ui_layer() -> Node:
-	# 1. Try direct child
-	var ui: Node = get_node_or_null(NODE_UI)
-	if ui: return ui
-	
-	# 2. Try group
-	return get_tree().get_first_node_in_group(GROUP_UI_LAYER)
 
 func _on_auto_save() -> void:
 	if GameState.current_world_id != "":

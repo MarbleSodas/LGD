@@ -1,5 +1,6 @@
-[gd_scene load_steps=12 format=3 uid="uid://dl26oebdec7b4"]
+[gd_scene load_steps=13 format=3 uid="uid://dl26oebdec7b4"]
 
+[ext_resource type="Script" path="res://ui/game_ui.gd" id="1_game_ui"]
 [ext_resource type="Script" uid="uid://beofp0rx6h1ga" path="res://ui/hotbar.gd" id="1_hotbar"]
 [ext_resource type="PackedScene" path="res://ui/components/hotbar_slot.tscn" id="2_slot"]
 [ext_resource type="PackedScene" path="res://ui/components/build_menu.tscn" id="4_build_menu"]
@@ -8,11 +9,22 @@
 [ext_resource type="PackedScene" path="res://ui/components/bulk_cost_panel.tscn" id="7_bulk_cost"]
 [ext_resource type="PackedScene" path="res://ui/components/container_panel.tscn" id="8_container"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="9_pause_menu"]
-[ext_resource type="PackedScene" uid="uid://cxqngioiimdhb" path="res://ui/rat_manager_panel.tscn" id="10_rat_panel"]
+[ext_resource type="PackedScene" uid="uid://dx8jwse7eiwfp" path="res://ui/rat_manager_panel.tscn" id="10_rat_panel"]
 [ext_resource type="PackedScene" path="res://ui/processor_menu.tscn" id="11_processor_menu"]
 [ext_resource type="PackedScene" uid="uid://dti8jq5547sy8" path="res://ui/components/dialogue_box.tscn" id="12_dialogue_box"]
 
 [node name="UI" type="CanvasLayer" groups=["ui_layer"]]
+script = ExtResource("1_game_ui")
+
+[node name="DimmingLayer" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.5)
+visible = false
 
 [node name="Hotbar" type="MarginContainer" parent="."]
 anchors_preset = 7

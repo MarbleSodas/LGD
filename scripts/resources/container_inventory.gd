@@ -161,8 +161,8 @@ func count_item(item_id: String) -> int:
 			total += slot_data.count
 	return total
 
-# Category order for sorting (mirrors Inventory autoload)
-const CATEGORY_ORDER: Array[String] = ["seed", "crop", "material", "tool", "decoration"]
+# Category order for sorting (mirrors InventoryItem's exported values)
+const CATEGORY_ORDER: Array[String] = ["Material", "Tool", "Consumable", "Misc"]
 
 func sort_inventory() -> void:
 	# 1. Consolidate stacks

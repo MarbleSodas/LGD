@@ -23,6 +23,9 @@ func register_dialogue_box(box: Control) -> void:
 
 func start_dialogue(resource: DialogueResource) -> void:
 	if is_dialogue_active: return
+	if resource == null:
+		push_error("DialogueManager: Cannot start a null dialogue resource.")
+		return
 	if not dialogue_box:
 		push_error("DialogueManager: No dialogue box registered!")
 		return
